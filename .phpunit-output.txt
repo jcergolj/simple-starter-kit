@@ -1,0 +1,14 @@
+ParaTest v7.23.0 upon PHPUnit 13.2.4 by Sebastian Bergmann and contributors.
+
+Processes:     6
+Runtime:       PHP 8.4.23
+Configuration: /home/jcergolj/work/projects/simple-starter-kit/phpunit.xml
+
+...............................................................  63 / 198 ( 31%)
+............................................................... 126 / 198 ( 63%)
+............................................................... 189 / 198 ( 95%)
+.........                                                       198 / 198 (100%)
+
+Time: 00:03.758, Memory: 42.50 MB
+
+[30;42mOK (198 tests, 599 assertions)[0m
