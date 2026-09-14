@@ -3,13 +3,15 @@
 namespace App\Http\Controllers\Settings;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 use Jcergolj\InAppNotifications\Facades\InAppNotification;
 use Laravel\Fortify\Actions\GenerateNewRecoveryCodes;
 
 class RecoveryCodesController extends Controller
 {
-    public function edit(Request $request)
+    public function edit(Request $request): View
     {
         return view('settings.recovery-codes.edit', [
             'user' => $user = $request->user(),
@@ -17,7 +19,7 @@ class RecoveryCodesController extends Controller
         ]);
     }
 
-    public function update(Request $request, GenerateNewRecoveryCodes $generateRecoveryCodes)
+    public function update(Request $request, GenerateNewRecoveryCodes $generateRecoveryCodes): RedirectResponse
     {
         $generateRecoveryCodes($request->user());
 
