@@ -4,7 +4,7 @@ A Laravel 13 starter kit for building business automation tools. It ships with a
 
 ## What’s included
 
-- **Laravel 13** with PHP 8.2+
+- **Laravel 13** with PHP 8.4.1+
 - **Hotwire (Turbo + Stimulus)** for server-rendered, reactive UIs
 - **Laravel Fortify** for authentication scaffolding
 - **Laravel Horizon** for queue monitoring and management
@@ -16,7 +16,7 @@ A Laravel 13 starter kit for building business automation tools. It ships with a
 
 ## Requirements
 
-- PHP 8.2+ (production uses 8.5 FPM)
+- PHP 8.4.1+ (production uses 8.5 FPM)
 - Composer
 - Node.js is **not** required — Tailwind and importmap are handled by Laravel packages
 - Git

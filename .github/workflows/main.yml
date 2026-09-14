@@ -21,9 +21,10 @@ jobs:
 
   tests:
     name: "tests"
-    uses: jcergolj/reusable-github-actions/.github/workflows/tests.yml@master
+    uses: jcergolj/reusable-github-actions/.github/workflows/tests.yml@c6137d1
     with:
       install-tailwind-css: true
+      php-versions: '["8.4", "8.5"]'
 
   phpmd:
     name: "phpmd"
