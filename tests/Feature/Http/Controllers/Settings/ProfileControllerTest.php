@@ -85,8 +85,11 @@ class ProfileControllerTest extends TestCase
 
         $user->refresh();
         $this->assertNull($user->email_verified_at);
+
         $this->assertSame('new@example.com', $user->pending_email);
+
         Notification::assertSentTo($user, VerifyEmail::class);
+
         Notification::assertSentTo($user, EmailChangedNotification::class);
     }
 
@@ -112,7 +115,9 @@ class ProfileControllerTest extends TestCase
         ]);
 
         $response->assertRedirect(route('password.confirm'));
+
         $this->assertSame('old@example.com', $user->refresh()->email);
+
         $this->assertNull($user->pending_email);
     }
 
@@ -130,7 +135,9 @@ class ProfileControllerTest extends TestCase
 
         $response->assertRedirect('/')
             ->assertSessionHasErrors('password');
+
         $this->assertSame('old@example.com', $user->refresh()->email);
+
         $this->assertNull($user->pending_email);
     }
 
@@ -154,7 +161,9 @@ class ProfileControllerTest extends TestCase
         $user->refresh();
 
         $this->assertSame('new@example.com', $user->email);
+
         $this->assertNull($user->pending_email);
+
         $this->assertNotNull($user->email_verified_at);
     }
 
