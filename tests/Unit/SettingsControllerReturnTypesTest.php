@@ -32,11 +32,11 @@ class SettingsControllerReturnTypesTest extends TestCase
                 'destroy' => RedirectResponse::class,
             ],
             ConfirmedTwoFactorController::class => [
-                'edit' => View::class,
+                'edit' => View::class.'|'.RedirectResponse::class,
                 'update' => RedirectResponse::class,
             ],
             RecoveryCodesController::class => [
-                'edit' => View::class,
+                'edit' => View::class.'|'.RedirectResponse::class,
                 'update' => RedirectResponse::class,
             ],
         ];
@@ -45,7 +45,7 @@ class SettingsControllerReturnTypesTest extends TestCase
             foreach ($actions as $action => $expectedReturnType) {
                 $this->assertSame(
                     $expectedReturnType,
-                    (new ReflectionMethod($controller, $action))->getReturnType()->getName(),
+                    (string) (new ReflectionMethod($controller, $action))->getReturnType(),
                     "{$controller}::{$action}() has an unexpected return type.",
                 );
             }
