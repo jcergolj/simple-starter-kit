@@ -48,17 +48,20 @@ class NewPasswordControllerTest extends TestCase
         Notification::fake();
 
         $user = User::factory()->create();
+        $rememberToken = $user->remember_token;
 
         $this->post(route('password.request'), [
             'email' => $user->email,
         ])->assertValid();
 
-        Notification::assertSentTo($user, ResetPassword::class, function ($notification) use ($user) {
+        Notification::assertSentTo($user, ResetPassword::class, function ($notification) use ($rememberToken, $user) {
             $this->post(route('password.update', ['token' => $notification->token]), [
                 'email' => $user->email,
                 'password' => 'password',
                 'password_confirmation' => 'password',
             ])->assertValid()->assertRedirect(route('login'));
+
+            $this->assertNotSame($rememberToken, $user->refresh()->remember_token);
 
             return true;
         });
