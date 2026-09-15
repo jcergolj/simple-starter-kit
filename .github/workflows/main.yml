@@ -1,45 +1,55 @@
 on:
   push:
+  pull_request:
+
+permissions:
+  contents: read
 
 jobs:
   code-formatter:
     name: "code formatter"
+    if: github.event_name == 'push'
     permissions:
       contents: write
-    uses: jcergolj/reusable-github-actions/.github/workflows/code-formatter.yml@master
+    uses: jcergolj/reusable-github-actions/.github/workflows/code-formatter.yml@2150f66a2a59c208a6f3510fe7257f79d28046a7
     with:
       pint-blade: true
       skip-npm: true
+    secrets:
+      PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
 
   larastan:
     name: "larastan"
-    uses: jcergolj/reusable-github-actions/.github/workflows/larastan.yml@master
+    uses: jcergolj/reusable-github-actions/.github/workflows/larastan.yml@2150f66a2a59c208a6f3510fe7257f79d28046a7
 
   envy:
     name: "envy"
-    uses: jcergolj/reusable-github-actions/.github/workflows/envy.yml@master
+    uses: jcergolj/reusable-github-actions/.github/workflows/envy.yml@2150f66a2a59c208a6f3510fe7257f79d28046a7
 
   tests:
     name: "tests"
-    uses: jcergolj/reusable-github-actions/.github/workflows/tests.yml@master
+    uses: jcergolj/reusable-github-actions/.github/workflows/tests.yml@2150f66a2a59c208a6f3510fe7257f79d28046a7
     with:
       install-tailwind-css: true
       php-versions: '["8.4", "8.5"]'
 
   phpmd:
     name: "phpmd"
-    uses: jcergolj/reusable-github-actions/.github/workflows/phpmd.yml@master
+    uses: jcergolj/reusable-github-actions/.github/workflows/phpmd.yml@2150f66a2a59c208a6f3510fe7257f79d28046a7
 
   gitleaks:
     name: "gitleaks scan"
-    uses: jcergolj/reusable-github-actions/.github/workflows/gitleaks.yml@master
+    uses: jcergolj/reusable-github-actions/.github/workflows/gitleaks.yml@2150f66a2a59c208a6f3510fe7257f79d28046a7
 
   trufflehog-scan:
     name: "trufflehog scan"
-    uses: jcergolj/reusable-github-actions/.github/workflows/trufflehog-scan.yml@master
+    uses: jcergolj/reusable-github-actions/.github/workflows/trufflehog-scan.yml@2150f66a2a59c208a6f3510fe7257f79d28046a7
 
   deploy:
-    if: github.ref == 'refs/heads/master'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    concurrency:
+      group: production-deployment
+      cancel-in-progress: false
     name: "deploy"
     needs:
       - code-formatter
@@ -49,5 +59,6 @@ jobs:
       - phpmd
       - gitleaks
       - trufflehog-scan
-    uses: jcergolj/reusable-github-actions/.github/workflows/deploy-only.yml@v3
-    secrets: inherit
+    uses: jcergolj/reusable-github-actions/.github/workflows/deploy-only.yml@e00e58780f81d80fe40a36f640b6b4712a4d5310
+    secrets:
+      DEPLOY_SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
