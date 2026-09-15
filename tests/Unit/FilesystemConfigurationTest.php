@@ -4,11 +4,26 @@ declare(strict_types=1);
 
 namespace Tests\Unit;
 
+use Illuminate\Support\Env;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class FilesystemConfigurationTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        Env::enablePutenv();
+    }
+
+    protected function tearDown(): void
+    {
+        Env::disablePutenv();
+
+        parent::tearDown();
+    }
+
     #[Test]
     public function sftp_root_uses_the_configured_environment_value(): void
     {
