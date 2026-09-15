@@ -6,6 +6,7 @@ namespace Tests\Feature\Http\Controllers\Settings;
 
 use App\Http\Controllers\Settings\ProfileController;
 use App\Models\User;
+use App\Notifications\EmailChangedNotification;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
@@ -85,6 +86,7 @@ class ProfileControllerTest extends TestCase
         $this->assertNull($user->email_verified_at);
         $this->assertSame('new@example.com', $user->pending_email);
         Notification::assertSentTo($user, VerifyEmail::class);
+        Notification::assertSentTo($user, EmailChangedNotification::class);
     }
 
     #[Test]

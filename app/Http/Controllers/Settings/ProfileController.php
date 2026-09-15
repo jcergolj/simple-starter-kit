@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Settings;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\DeleteProfileRequest;
 use App\Http\Requests\Settings\UpdateProfileRequest;
+use App\Notifications\EmailChangedNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -18,7 +19,7 @@ class ProfileController extends Controller
     {
         return view('settings.profile.edit', [
             'name' => $request->user()->name,
-            'email' => $request->user()->pending_email ?? $request->user()->email,
+            'email' => $request->user()->pendingEmail() ?? $request->user()->email,
         ]);
     }
 
@@ -26,7 +27,6 @@ class ProfileController extends Controller
     {
         $user = $request->user();
         $attributes = $request->validated();
-        $oldEmail = $user->email;
 
         $user->name = $attributes['name'];
 
@@ -35,6 +35,7 @@ class ProfileController extends Controller
             $user->email_verified_at = null;
             $user->save();
             $user->sendEmailVerificationNotification();
+            $user->notify(new EmailChangedNotification($attributes['email']));
         } else {
             $user->pending_email = null;
             $user->save();
