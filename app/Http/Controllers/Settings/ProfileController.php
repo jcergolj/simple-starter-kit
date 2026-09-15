@@ -26,7 +26,6 @@ class ProfileController extends Controller
     {
         $user = $request->user();
         $attributes = $request->validated();
-        $oldEmail = $user->email;
 
         $user->name = $attributes['name'];
 
