@@ -13,8 +13,12 @@ use Laravel\Fortify\Actions\ConfirmTwoFactorAuthentication;
 
 class ConfirmedTwoFactorController extends Controller
 {
-    public function edit(Request $request): View
+    public function edit(Request $request): View|RedirectResponse
     {
+        if ($request->user()->getRawOriginal('two_factor_secret') === null) {
+            return to_route('settings.two-factor.edit');
+        }
+
         return view('settings.confirmed-two-factor.edit', [
             'user' => $user = $request->user(),
             'qrCodeSvg' => $user->twoFactorQrCodeSvg(),
@@ -24,6 +28,10 @@ class ConfirmedTwoFactorController extends Controller
 
     public function update(ConfirmTwoFactorRequest $request, ConfirmTwoFactorAuthentication $confirmTwoFactor): RedirectResponse
     {
+        if ($request->user()->getRawOriginal('two_factor_secret') === null) {
+            return to_route('settings.two-factor.edit');
+        }
+
         try {
             $confirmTwoFactor($request->user(), $request->validated('code'));
         } catch (ValidationException $e) {
