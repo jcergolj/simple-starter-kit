@@ -46,7 +46,7 @@ class User extends Authenticatable implements MustVerifyEmail
     protected function email(): Attribute
     {
         return Attribute::make(
-            set: fn (string $value): string => NormalizeEmail::normalize($value),
+            set: NormalizeEmail::normalize(...),
         );
     }
 

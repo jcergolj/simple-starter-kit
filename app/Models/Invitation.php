@@ -51,7 +51,7 @@ class Invitation extends Model
     protected function email(): Attribute
     {
         return Attribute::make(
-            set: fn (string $value): string => NormalizeEmail::normalize($value),
+            set: NormalizeEmail::normalize(...),
         );
     }
 
