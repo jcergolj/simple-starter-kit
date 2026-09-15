@@ -24,7 +24,7 @@ Route::post('invite/{token}', [AcceptInvitationController::class, 'store'])
     ->name('accept.invitations.store');
 
 // Admin — send and revoke invitations
-Route::middleware(['auth', 'verified', 'not_blocked', 'admin'])->group(function () {
+Route::middleware(['auth', 'auth.session', 'verified', 'not_blocked', 'admin'])->group(function () {
     Route::get('invitations/create', [InvitationController::class, 'create'])
         ->name('invitations.create');
     Route::post('invitations', [InvitationController::class, 'store'])
@@ -41,14 +41,14 @@ Route::middleware(['auth', 'verified', 'not_blocked', 'admin'])->group(function 
 });
 
 Route::get('csrf-token', [CsrfTokenController::class, 'show'])
-    ->middleware(['auth', 'not_blocked'])
+    ->middleware(['auth', 'auth.session', 'not_blocked'])
     ->name('csrf-token');
 
 Route::view('dashboard', 'dashboard')
-    ->middleware(['auth', 'verified', 'not_blocked'])
+    ->middleware(['auth', 'auth.session', 'verified', 'not_blocked'])
     ->name('dashboard');
 
-Route::middleware(['auth', 'verified', 'not_blocked'])->group(function () {
+Route::middleware(['auth', 'auth.session', 'verified', 'not_blocked'])->group(function () {
     Route::get('settings', [SettingsController::class, 'show'])->name('settings');
 
     Route::prefix('settings')->as('settings.')->group(function () {

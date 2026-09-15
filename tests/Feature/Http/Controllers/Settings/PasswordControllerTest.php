@@ -25,6 +25,7 @@ class PasswordControllerTest extends TestCase
         $this->actingAs($user)->get(route('settings.password.edit'))
             ->assertOk()
             ->assertViewIs('settings.password.edit')
+            ->assertMiddlewareIsApplied('auth.session')
             ->assertViewHasForm('id="update-password-form"', 'PUT', route('settings.password.update'))
             ->assertFormHasCSRF()
             ->assertFormHasPasswordInput('current_password')
@@ -47,6 +48,7 @@ class PasswordControllerTest extends TestCase
         $user = User::factory()->create([
             'password' => Hash::make('old-password'),
         ]);
+        $rememberToken = $user->remember_token;
 
         $response = $this->actingAs($user)
             ->from(route('settings.password.edit'))
@@ -60,6 +62,8 @@ class PasswordControllerTest extends TestCase
 
         $user->refresh();
         $this->assertTrue(Hash::check('new-password-123', $user->password));
+
+        $this->assertNotSame($rememberToken, $user->remember_token);
     }
 
     #[Test]
