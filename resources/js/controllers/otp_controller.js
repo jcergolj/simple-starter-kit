@@ -48,8 +48,17 @@ export default class extends Controller {
         this.#updateHiddenInputValue();
     }
 
-    sanitizeInput({ target }) {
+    handleInput({ target }) {
         target.value = target.value.replace(/[^0-9]/g, '').slice(0, 1);
+        this.#updateHiddenInputValue();
+    }
+
+    syncCode() {
+        this.inputTargets.forEach(input => {
+            input.value = input.value.replace(/[^0-9]/g, '').slice(0, 1);
+        });
+
+        this.#updateHiddenInputValue();
     }
 
     clearAllInputs() {

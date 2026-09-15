@@ -6,7 +6,7 @@
 <div
     data-controller="otp"
     data-otp-digits-value="@js($digits)"
-    data-action="focus-auth-2fa-auth-code@window->otp#focusFirstInputField clear-auth-2fa-auth-code@window->otp#clearAllInputs"
+    data-action="focus-auth-2fa-auth-code@window->otp#focusFirstInputField clear-auth-2fa-auth-code@window->otp#clearAllInputs submit->otp#syncCode"
     class="relative"
 >
     <div class="flex items-center justify-center space-x-2">
@@ -18,7 +18,7 @@
                 pattern="[0-9]"
                 maxlength="1"
                 autocomplete="off"
-                data-action="paste->otp#handlePaste keydown->otp#handleKeydown focus->otp#handleFocus input->otp#sanitizeInput"
+                data-action="paste->otp#handlePaste keydown->otp#handleKeydown focus->otp#handleFocus input->otp#handleInput"
                 class="h-10 w-10 input text-center text-sm font-medium @if($x == 0) rounded-l-md @endif @if($x == $digits - 1) rounded-r-md @endif @if($x > 0) -ml-px @endif"
             />
         @endfor
