@@ -21,7 +21,7 @@ backup_config="$(<"$ROOT_DIR/config/backup.php")"
 [[ "$deploy_config" == *"task('deploy:activate-workers'"* ]]
 [[ "$deploy_config" == *"after('deploy:symlink', 'deploy:activate-workers')"* ]]
 [[ "$deploy_config" == *"after('deploy:activate-workers', 'deploy:restart-workers')"* ]]
-[[ "$backup_config" == *"config('database.default')"* ]]
+[[ "$backup_config" == *"env('DB_CONNECTION', 'sqlite')"* ]]
 [[ "$backup_config" != *"'databases' => ["$'\n'"                'sqlite'"* ]]
 
 printf '%s\n' 'Installation script checks passed.'

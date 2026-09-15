@@ -92,8 +92,10 @@
         ],
         "test": [
             "@php artisan config:clear --ansi",
-            "@php artisan test"
+            "@php artisan test",
+            "@test:boundaries"
         ],
+        "test:boundaries": "bash tests/run-shell-tests.sh",
         "phpstan": "./vendor/bin/phpstan analyse --memory-limit=2G",
         "env-sync": "php artisan envy:sync --dry",
         "env-prune": "php artisan envy:prune --dry",
