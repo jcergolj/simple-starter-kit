@@ -29,6 +29,7 @@ class UpdateProfileRequest extends AppFormRequest
                 'email',
                 'max:255',
                 Rule::unique(User::class)->ignore($this->user()->id),
+                Rule::unique(User::class, 'pending_email')->ignore($this->user()->id),
             ],
         ];
     }

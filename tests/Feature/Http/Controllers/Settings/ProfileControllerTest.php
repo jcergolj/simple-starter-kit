@@ -6,7 +6,11 @@ namespace Tests\Feature\Http\Controllers\Settings;
 
 use App\Http\Controllers\Settings\ProfileController;
 use App\Models\User;
+use Carbon\Carbon;
+use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\URL;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -15,6 +19,13 @@ use Tests\TestCase;
 class ProfileControllerTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        Notification::fake();
+    }
 
     #[Test]
     public function edit_requires_authentication(): void
@@ -34,6 +45,7 @@ class ProfileControllerTest extends TestCase
         ]);
 
         $response = $this->actingAs($user)
+            ->withSession(['auth.password_confirmed_at' => Carbon::now()->getTimestamp()])
             ->from(route('settings.profile.edit'))
             ->patch(route('settings.profile.update'), [
                 'name' => 'New Name',
@@ -46,11 +58,13 @@ class ProfileControllerTest extends TestCase
 
         $this->assertEquals('New Name', $user->name);
 
-        $this->assertEquals('new@example.com', $user->email);
+        $this->assertEquals('old@example.com', $user->email);
+
+        $this->assertEquals('new@example.com', $user->pending_email);
     }
 
     #[Test]
-    public function update_resets_email_verification_when_email_changes(): void
+    public function update_keeps_the_current_email_as_recovery_until_replacement_is_verified(): void
     {
         $user = User::factory()->create([
             'name' => 'Test Name',
@@ -59,6 +73,7 @@ class ProfileControllerTest extends TestCase
         ]);
 
         $response = $this->actingAs($user)
+            ->withSession(['auth.password_confirmed_at' => Carbon::now()->getTimestamp()])
             ->from(route('settings.profile.edit'))
             ->patch(route('settings.profile.update'), [
                 'name' => 'Test Name',
@@ -69,6 +84,10 @@ class ProfileControllerTest extends TestCase
 
         $user->refresh();
         $this->assertNull($user->email_verified_at);
+
+        $this->assertSame('new@example.com', $user->pending_email);
+
+        Notification::assertSentTo($user, VerifyEmail::class);
     }
 
     #[Test]
@@ -83,9 +102,73 @@ class ProfileControllerTest extends TestCase
     }
 
     #[Test]
+    public function update_requires_recent_password_confirmation(): void
+    {
+        $user = User::factory()->create(['email' => 'old@example.com']);
+
+        $response = $this->actingAs($user)->patch(route('settings.profile.update'), [
+            'name' => 'New Name',
+            'email' => 'new@example.com',
+        ]);
+
+        $response->assertRedirect(route('password.confirm'));
+
+        $this->assertSame('old@example.com', $user->refresh()->email);
+
+        $this->assertNull($user->pending_email);
+    }
+
+    #[Test]
+    public function incorrect_password_confirmation_does_not_change_email(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'old@example.com',
+            'password' => bcrypt('password'),
+        ]);
+
+        $response = $this->actingAs($user)->post(route('password.confirm.store'), [
+            'password' => 'wrong-password',
+        ]);
+
+        $response->assertRedirect('/')
+            ->assertSessionHasErrors('password');
+
+        $this->assertSame('old@example.com', $user->refresh()->email);
+
+        $this->assertNull($user->pending_email);
+    }
+
+    #[Test]
+    public function verified_replacement_becomes_the_recovery_email(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'old@example.com',
+            'email_verified_at' => null,
+            'pending_email' => 'new@example.com',
+        ]);
+
+        $verificationUrl = URL::temporarySignedRoute(
+            'verification.verify',
+            now()->addMinutes(10),
+            ['id' => $user->id, 'hash' => sha1('new@example.com')],
+        );
+
+        $this->actingAs($user)->get($verificationUrl)->assertRedirect(route('dashboard').'?verified=1');
+
+        $user->refresh();
+
+        $this->assertSame('new@example.com', $user->email);
+
+        $this->assertNull($user->pending_email);
+
+        $this->assertNotNull($user->email_verified_at);
+    }
+
+    #[Test]
     public function delete_page_is_displayed(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->create())
+            ->withSession(['auth.password_confirmed_at' => Carbon::now()->getTimestamp()]);
 
         $this->get(route('settings.profile.delete'))
             ->assertOk()
@@ -154,7 +237,8 @@ class ProfileControllerTest extends TestCase
     #[Test]
     public function profile_page_is_displayed(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->create())
+            ->withSession(['auth.password_confirmed_at' => Carbon::now()->getTimestamp()]);
 
         $this->get(route('settings.profile.edit'))
             ->assertOk()
@@ -171,7 +255,7 @@ class ProfileControllerTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $this->actingAs($user);
+        $this->actingAs($user)->withSession(['auth.password_confirmed_at' => Carbon::now()->getTimestamp()]);
 
         $this->put(route('settings.profile.update'), [
             'name' => 'Test User',
@@ -182,7 +266,7 @@ class ProfileControllerTest extends TestCase
 
         $this->assertEquals('Test User', $user->name);
 
-        $this->assertEquals('test@example.com', $user->email);
+        $this->assertEquals('test@example.com', $user->pending_email);
 
         $this->assertNull($user->email_verified_at);
     }
@@ -192,7 +276,7 @@ class ProfileControllerTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $this->actingAs($user);
+        $this->actingAs($user)->withSession(['auth.password_confirmed_at' => Carbon::now()->getTimestamp()]);
 
         $this->put(route('settings.profile.update'), [
             'name' => 'Test User',
@@ -207,7 +291,7 @@ class ProfileControllerTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $this->actingAs($user);
+        $this->actingAs($user)->withSession(['auth.password_confirmed_at' => Carbon::now()->getTimestamp()]);
 
         $this->post(route('settings.profile.destroy'), [
             'password' => 'password',

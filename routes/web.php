@@ -52,7 +52,9 @@ Route::middleware(['auth', 'auth.session', 'verified', 'not_blocked'])->group(fu
     Route::get('settings', [SettingsController::class, 'show'])->name('settings');
 
     Route::prefix('settings')->as('settings.')->group(function () {
-        Route::singleton('profile', ProfileController::class)->only(['edit', 'update']);
+        Route::singleton('profile', ProfileController::class)
+            ->middleware('password.confirm')
+            ->only(['edit', 'update']);
         Route::get('profile/delete', [ProfileController::class, 'delete'])->name('profile.delete');
         Route::post('profile/delete', [ProfileController::class, 'destroy'])->name('profile.destroy');
         Route::singleton('password', PasswordController::class)->only(['edit', 'update']);
