@@ -11,8 +11,12 @@ use Laravel\Fortify\Actions\GenerateNewRecoveryCodes;
 
 class RecoveryCodesController extends Controller
 {
-    public function edit(Request $request): View
+    public function edit(Request $request): View|RedirectResponse
     {
+        if ($request->user()->getRawOriginal('two_factor_recovery_codes') === null) {
+            return to_route('settings.two-factor.edit');
+        }
+
         return view('settings.recovery-codes.edit', [
             'user' => $user = $request->user(),
             'recoveryCodes' => json_decode((string) decrypt($user->two_factor_recovery_codes), true),
@@ -21,6 +25,10 @@ class RecoveryCodesController extends Controller
 
     public function update(Request $request, GenerateNewRecoveryCodes $generateRecoveryCodes): RedirectResponse
     {
+        if ($request->user()->getRawOriginal('two_factor_recovery_codes') === null) {
+            return to_route('settings.two-factor.edit');
+        }
+
         $generateRecoveryCodes($request->user());
 
         InAppNotification::success(__('New recovery codes generated.'));

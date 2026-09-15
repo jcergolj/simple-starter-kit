@@ -47,6 +47,30 @@ class ConfirmedTwoFactorControllerTest extends TestCase
     }
 
     #[Test]
+    public function edit_redirects_when_two_factor_setup_is_unavailable(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->withoutMiddleware(RequirePassword::class)
+            ->get(route('settings.confirmed-two-factor.edit'))
+            ->assertRedirect(route('settings.two-factor.edit'));
+    }
+
+    #[Test]
+    public function update_redirects_when_two_factor_setup_is_unavailable(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->withoutMiddleware(RequirePassword::class)
+            ->put(route('settings.confirmed-two-factor.update'), [
+                'code' => '123456',
+            ])
+            ->assertRedirect(route('settings.two-factor.edit'));
+    }
+
+    #[Test]
     public function two_factor_authentication_can_be_confirmed(): void
     {
         $user = User::factory()->withTwoFactorAuthenticationEnabled()->create();
@@ -74,6 +98,7 @@ class ConfirmedTwoFactorControllerTest extends TestCase
         $user = User::factory()->create();
 
         $this->actingAs($user)
+            ->withoutMiddleware(RequirePassword::class)
             ->put(route('settings.two-factor.update'));
 
         $user->refresh();

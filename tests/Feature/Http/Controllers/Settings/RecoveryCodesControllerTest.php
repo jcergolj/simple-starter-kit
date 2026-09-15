@@ -44,6 +44,28 @@ class RecoveryCodesControllerTest extends TestCase
     }
 
     #[Test]
+    public function edit_redirects_when_recovery_codes_are_unavailable(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->withoutMiddleware(RequirePassword::class)
+            ->get(route('settings.recovery-codes.edit'))
+            ->assertRedirect(route('settings.two-factor.edit'));
+    }
+
+    #[Test]
+    public function update_redirects_when_recovery_codes_are_unavailable(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->withoutMiddleware(RequirePassword::class)
+            ->put(route('settings.recovery-codes.update'))
+            ->assertRedirect(route('settings.two-factor.edit'));
+    }
+
+    #[Test]
     public function can_view_recovery_codes(): void
     {
         $user = User::factory()->withTwoFactorAuthenticationEnabled()->create();
