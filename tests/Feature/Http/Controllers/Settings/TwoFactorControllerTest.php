@@ -63,6 +63,17 @@ class TwoFactorControllerTest extends TestCase
     }
 
     #[Test]
+    public function returning_to_two_factor_settings_is_excluded_from_turbo_cache(): void
+    {
+        $user = User::factory()->withTwoFactorAuthenticationEnabled()->create();
+
+        $this->actingAs($user)
+            ->withoutMiddleware(RequirePassword::class)
+            ->get(route('settings.two-factor.edit'))
+            ->assertSee('<meta name="turbo-cache-control" content="no-cache">', false);
+    }
+
+    #[Test]
     public function two_factor_authentication_can_be_enabled(): void
     {
         $user = User::factory()->create();
