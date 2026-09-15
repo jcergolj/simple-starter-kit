@@ -110,6 +110,18 @@ class InvitationControllerTest extends TestCase
     }
 
     #[Test]
+    public function admin_can_send_invite_with_mixed_case_email(): void
+    {
+        Mail::fake();
+
+        $this->actingAs(User::factory()->admin()->create())
+            ->post(route('invitations.store'), ['email' => '  Invite@Example.COM '])
+            ->assertRedirect(route('invitations.create'));
+
+        $this->assertDatabaseHas('invitations', ['email' => 'invite@example.com']);
+    }
+
+    #[Test]
     public function duplicate_pending_email_fails_validation(): void
     {
         $admin = User::factory()->admin()->create();

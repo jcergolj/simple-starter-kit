@@ -48,6 +48,20 @@ class CreateUserCommandTest extends TestCase
     }
 
     #[Test]
+    public function it_normalizes_email_when_creating_user_directly(): void
+    {
+        $this->artisan('app:create-user')
+            ->expectsChoice(__('User role?'), __('User'), [__('User'), __('Admin'), __('Superadmin')])
+            ->expectsChoice(__('How should the user be created?'), __('Create directly'), [__('Send invitation'), __('Create directly')])
+            ->expectsQuestion(__('Name'), 'John Doe')
+            ->expectsQuestion(__('Email'), 'John@Example.COM')
+            ->expectsQuestion(__('Password'), 'password')
+            ->assertSuccessful();
+
+        $this->assertDatabaseHas('users', ['email' => 'john@example.com']);
+    }
+
+    #[Test]
     public function it_creates_admin_directly(): void
     {
         $this->artisan('app:create-user')
@@ -130,6 +144,21 @@ class CreateUserCommandTest extends TestCase
         Mail::assertSent(InvitationMail::class, function (InvitationMail $mail) {
             return $mail->invitation->email === 'invite@example.com';
         });
+    }
+
+    #[Test]
+    public function it_normalizes_email_when_sending_invitation(): void
+    {
+        Mail::fake();
+
+        $this->artisan('app:create-user')
+            ->expectsChoice(__('User role?'), __('User'), [__('User'), __('Admin'), __('Superadmin')])
+            ->expectsChoice(__('How should the user be created?'), __('Send invitation'), [__('Send invitation'), __('Create directly')])
+            ->expectsQuestion(__('Email'), 'Invite@Example.COM')
+            ->expectsChoice(__('Language'), 'en', ['en', 'sl'])
+            ->assertSuccessful();
+
+        $this->assertDatabaseHas('invitations', ['email' => 'invite@example.com']);
     }
 
     #[Test]

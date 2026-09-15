@@ -5,10 +5,18 @@ declare(strict_types=1);
 namespace App\Http\Requests;
 
 use App\Models\User;
+use App\ValueObjects\EmailAddress;
 use Illuminate\Validation\Rule;
 
 class UpdateUserRequest extends AppFormRequest
 {
+    protected function prepareForValidation(): void
+    {
+        if (is_string($email = $this->input('email'))) {
+            $this->merge(['email' => EmailAddress::from($email)->toString()]);
+        }
+    }
+
     public function rules(): array
     {
         return [
@@ -16,6 +24,7 @@ class UpdateUserRequest extends AppFormRequest
             'email' => [
                 'required',
                 'string',
+                'lowercase',
                 'email',
                 'max:255',
                 Rule::unique(User::class)->ignore($this->route('user')),

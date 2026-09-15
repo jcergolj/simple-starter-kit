@@ -7,6 +7,7 @@ use App\Actions\Fortify\UpdateUserPassword;
 use App\Actions\Fortify\UpdateUserProfileInformation;
 use App\Models\User;
 use App\Rules\CurrentPassword;
+use App\ValueObjects\EmailAddress;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -68,7 +69,7 @@ class FortifyServiceProvider extends ServiceProvider
     private function configureFotifyActions(): void
     {
         Fortify::authenticateUsing(function (Request $request): ?User {
-            $user = User::where('email', $request->input('email'))->first();
+            $user = User::where('email', EmailAddress::from($request->input('email', ''))->toString())->first();
 
             if ($user?->isBlocked()) {
                 return null;
