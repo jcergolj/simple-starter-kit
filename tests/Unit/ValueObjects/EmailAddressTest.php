@@ -18,6 +18,7 @@ class EmailAddressTest extends TestCase
         $email = EmailAddress::from('  Alice@Example.COM ');
 
         $this->assertSame('alice@example.com', $email->toString());
+
         $this->assertSame('alice@example.com', (string) $email);
     }
 

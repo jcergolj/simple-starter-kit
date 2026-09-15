@@ -62,7 +62,9 @@ class CreateUserCommand extends Command
             label: __('Email'),
             required: true,
             validate: ['email' => 'required|email|unique:users,email'],
-            transform: fn (string $email): string => EmailAddress::from($email)->toString(),
+            transform: function (string $email): string {
+                return EmailAddress::from($email)->toString();
+            },
         );
 
         $languages = array_map(
@@ -100,7 +102,9 @@ class CreateUserCommand extends Command
             label: __('Email'),
             required: true,
             validate: ['email' => 'required|email|unique:users,email'],
-            transform: fn (string $email): string => EmailAddress::from($email)->toString(),
+            transform: function (string $email): string {
+                return EmailAddress::from($email)->toString();
+            },
         );
 
         $password = password(

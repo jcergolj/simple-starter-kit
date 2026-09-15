@@ -6,10 +6,10 @@ namespace App\ValueObjects;
 
 use Illuminate\Support\Str;
 
-final class EmailAddress
+final readonly class EmailAddress implements \Stringable
 {
     private function __construct(
-        private readonly string $value,
+        private string $value,
     ) {}
 
     public static function from(?string $email): self
