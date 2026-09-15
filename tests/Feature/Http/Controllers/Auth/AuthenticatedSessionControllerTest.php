@@ -41,6 +41,19 @@ class AuthenticatedSessionControllerTest extends TestCase
     }
 
     #[Test]
+    public function blocked_users_cannot_authenticate_using_the_login_screen(): void
+    {
+        $user = User::factory()->blocked()->create();
+
+        $this->post(route('login.store'), [
+            'email' => $user->email,
+            'password' => 'password',
+        ])->assertInvalid('email');
+
+        $this->assertGuest();
+    }
+
+    #[Test]
     public function users_can_not_authenticate_with_invalid_password(): void
     {
         $user = User::factory()->create();
@@ -63,5 +76,27 @@ class AuthenticatedSessionControllerTest extends TestCase
             ->assertRedirect('/');
 
         $this->assertGuest();
+    }
+
+    #[Test]
+    public function blocked_users_can_logout(): void
+    {
+        $user = User::factory()->blocked()->create();
+
+        $this->actingAs($user)
+            ->post(route('logout'))
+            ->assertRedirect('/');
+
+        $this->assertGuest();
+    }
+
+    #[Test]
+    public function blocked_users_can_visit_public_pages(): void
+    {
+        $user = User::factory()->blocked()->create();
+
+        $this->actingAs($user)
+            ->get(route('home'))
+            ->assertOk();
     }
 }
