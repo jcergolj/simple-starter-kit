@@ -72,7 +72,7 @@ return [
             'visibility' => 'private',
             'directory_visibility' => 'private',
             'port' => (int) env('SFTP_PORT', 22),
-            'root' => env('SFTP_ROOT'.config('app.name'), '/home/backup'),
+            'root' => env('SFTP_ROOT', '/home/backup'),
         ],
 
     ],
