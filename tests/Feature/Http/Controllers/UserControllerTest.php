@@ -189,6 +189,7 @@ class UserControllerTest extends TestCase
         $response->assertRedirect(route('users.index'));
 
         $this->assertNull($user->refresh()->email_verified_at);
+
         Notification::assertSentTo($user, VerifyEmail::class);
     }
 
@@ -206,6 +207,7 @@ class UserControllerTest extends TestCase
         $response->assertRedirect(route('users.index'));
 
         InAppNotification::assertSuccess(__('User updated.'));
+
         Notification::assertNotSentTo($user, VerifyEmail::class);
     }
 
