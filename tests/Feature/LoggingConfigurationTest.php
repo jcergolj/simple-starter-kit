@@ -14,6 +14,7 @@ class LoggingConfigurationTest extends TestCase
     public function the_default_log_stack_resolves_without_bugsnag(): void
     {
         $this->assertSame('stack', config('logging.default'));
+
         $this->assertArrayNotHasKey('bugsnag', config('logging.channels'));
 
         config()->set('logging.channels.stack.channels', ['single']);
