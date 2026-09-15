@@ -23,10 +23,10 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'admin' => EnsureUserIsAdmin::class,
+            'not_blocked' => EnsureUserIsNotBlocked::class,
         ]);
         $middleware->web(append: [
             SetLocaleMiddleware::class,
-            EnsureUserIsNotBlocked::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

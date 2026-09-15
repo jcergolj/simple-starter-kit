@@ -5,8 +5,10 @@ namespace App\Providers;
 use App\Actions\Fortify\ResetUserPassword;
 use App\Actions\Fortify\UpdateUserPassword;
 use App\Actions\Fortify\UpdateUserProfileInformation;
+use App\Models\User;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
@@ -64,6 +66,17 @@ class FortifyServiceProvider extends ServiceProvider
 
     private function configureFotifyActions(): void
     {
+        Fortify::authenticateUsing(function (Request $request): ?User {
+            $user = User::where('email', $request->input('email'))->first();
+
+            if ($user?->isBlocked()) {
+                return null;
+            }
+
+            return $user && Hash::check($request->input('password'), $user->password)
+                ? $user
+                : null;
+        });
         Fortify::updateUserProfileInformationUsing(UpdateUserProfileInformation::class);
         Fortify::updateUserPasswordsUsing(UpdateUserPassword::class);
         Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
