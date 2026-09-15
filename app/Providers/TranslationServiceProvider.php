@@ -4,11 +4,7 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
-use Bugsnag\BugsnagLaravel\Facades\Bugsnag;
-use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Str;
 
 class TranslationServiceProvider extends ServiceProvider
 {
