@@ -13,6 +13,7 @@ CADDY_KEY="/etc/caddy/certs/cloudflare-wildcard.key"
 step_number=0
 
 die() { echo -e "${RED}[ERROR]${NC} $*" >&2; exit 1; }
+step() { echo -e "${GREEN}[STEP]${NC} $1"; }
 ok() { echo -e "${GREEN}[OK]${NC} $*"; }
 warn() { echo -e "${YELLOW}[WARN]${NC} $*"; }
 
