@@ -123,6 +123,60 @@ class InvitationControllerTest extends TestCase
     }
 
     #[Test]
+    public function expired_invitation_can_be_replaced(): void
+    {
+        Mail::fake();
+        $admin = User::factory()->admin()->create();
+        $invitation = Invitation::factory()->expired()->create([
+            'email' => 'expired@example.com',
+        ]);
+        $oldToken = $invitation->token;
+
+        $response = $this->actingAs($admin)->post(route('invitations.store'), [
+            'email' => $invitation->email,
+        ]);
+
+        $response->assertRedirect(route('invitations.create'));
+
+        $invitation->refresh();
+
+        $this->assertNotSame($oldToken, $invitation->token);
+
+        $this->assertTrue($invitation->isPending());
+
+        $this->get(route('invitations.accept', $oldToken))->assertNotFound();
+
+        Mail::assertSent(InvitationMail::class);
+    }
+
+    #[Test]
+    public function accepted_invitation_can_be_replaced(): void
+    {
+        Mail::fake();
+        $admin = User::factory()->admin()->create();
+        $invitation = Invitation::factory()->accepted()->create([
+            'email' => 'accepted@example.com',
+        ]);
+        $oldToken = $invitation->token;
+
+        $response = $this->actingAs($admin)->post(route('invitations.store'), [
+            'email' => $invitation->email,
+        ]);
+
+        $response->assertRedirect(route('invitations.create'));
+
+        $invitation->refresh();
+
+        $this->assertNotSame($oldToken, $invitation->token);
+
+        $this->assertNull($invitation->accepted_at);
+
+        $this->assertTrue($invitation->isPending());
+
+        $this->get(route('invitations.accept', $oldToken))->assertNotFound();
+    }
+
+    #[Test]
     public function admin_can_revoke_pending_invitation(): void
     {
         $admin = User::factory()->admin()->create();
