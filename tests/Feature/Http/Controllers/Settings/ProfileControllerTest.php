@@ -7,6 +7,7 @@ namespace Tests\Feature\Http\Controllers\Settings;
 use App\Http\Controllers\Settings\ProfileController;
 use App\Models\User;
 use App\Notifications\EmailChangedNotification;
+use Carbon\Carbon;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
@@ -45,7 +46,7 @@ class ProfileControllerTest extends TestCase
         ]);
 
         $response = $this->actingAs($user)
-            ->withSession(['auth.password_confirmed_at' => time()])
+            ->withSession(['auth.password_confirmed_at' => Carbon::now()->getTimestamp()])
             ->from(route('settings.profile.edit'))
             ->patch(route('settings.profile.update'), [
                 'name' => 'New Name',
@@ -73,7 +74,7 @@ class ProfileControllerTest extends TestCase
         ]);
 
         $response = $this->actingAs($user)
-            ->withSession(['auth.password_confirmed_at' => time()])
+            ->withSession(['auth.password_confirmed_at' => Carbon::now()->getTimestamp()])
             ->from(route('settings.profile.edit'))
             ->patch(route('settings.profile.update'), [
                 'name' => 'Test Name',
@@ -161,7 +162,7 @@ class ProfileControllerTest extends TestCase
     public function delete_page_is_displayed(): void
     {
         $this->actingAs(User::factory()->create())
-            ->withSession(['auth.password_confirmed_at' => time()]);
+            ->withSession(['auth.password_confirmed_at' => Carbon::now()->getTimestamp()]);
 
         $this->get(route('settings.profile.delete'))
             ->assertOk()
@@ -231,7 +232,7 @@ class ProfileControllerTest extends TestCase
     public function profile_page_is_displayed(): void
     {
         $this->actingAs(User::factory()->create())
-            ->withSession(['auth.password_confirmed_at' => time()]);
+            ->withSession(['auth.password_confirmed_at' => Carbon::now()->getTimestamp()]);
 
         $this->get(route('settings.profile.edit'))
             ->assertOk()
@@ -248,7 +249,7 @@ class ProfileControllerTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $this->actingAs($user)->withSession(['auth.password_confirmed_at' => time()]);
+        $this->actingAs($user)->withSession(['auth.password_confirmed_at' => Carbon::now()->getTimestamp()]);
 
         $this->put(route('settings.profile.update'), [
             'name' => 'Test User',
@@ -269,7 +270,7 @@ class ProfileControllerTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $this->actingAs($user)->withSession(['auth.password_confirmed_at' => time()]);
+        $this->actingAs($user)->withSession(['auth.password_confirmed_at' => Carbon::now()->getTimestamp()]);
 
         $this->put(route('settings.profile.update'), [
             'name' => 'Test User',
@@ -284,7 +285,7 @@ class ProfileControllerTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $this->actingAs($user)->withSession(['auth.password_confirmed_at' => time()]);
+        $this->actingAs($user)->withSession(['auth.password_confirmed_at' => Carbon::now()->getTimestamp()]);
 
         $this->post(route('settings.profile.destroy'), [
             'password' => 'password',
