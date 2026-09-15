@@ -9,6 +9,7 @@ use App\Http\Controllers\AcceptInvitationController;
 use App\Http\Requests\AcceptInvitationRequest;
 use App\Models\Invitation;
 use App\Models\User;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Jcergolj\FormRequestAssertions\TestableFormRequest;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -174,6 +175,28 @@ class AcceptInvitationControllerTest extends TestCase
         ]);
 
         $this->assertNotNull($invitation->fresh()->accepted_at);
+    }
+
+    #[Test]
+    public function store_rolls_back_user_creation_when_acceptance_fails(): void
+    {
+        $invitation = Invitation::factory()->create(['email' => 'existing@example.com']);
+        User::factory()->create(['email' => $invitation->email]);
+
+        $this->withoutExceptionHandling();
+
+        try {
+            $this->post(route('accept.invitations.store', $invitation->token), [
+                'name' => 'Jane Doe',
+                'password' => 'Secret123!',
+                'password_confirmation' => 'Secret123!',
+            ]);
+
+            $this->fail('The duplicate email should abort invitation acceptance.');
+        } catch (QueryException) {
+            $this->assertDatabaseCount('users', 1);
+            $this->assertNull($invitation->fresh()->accepted_at);
+        }
     }
 
     #[Test]
