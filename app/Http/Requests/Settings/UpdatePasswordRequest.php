@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Requests\Settings;
 
 use App\Http\Requests\AppFormRequest;
+use App\Rules\CurrentPassword;
 use Illuminate\Validation\Rules\Password;
 
 class UpdatePasswordRequest extends AppFormRequest
@@ -12,7 +13,7 @@ class UpdatePasswordRequest extends AppFormRequest
     public function rules(): array
     {
         return [
-            'current_password' => ['required', 'string', 'current_password'],
+            'current_password' => ['required', 'string', new CurrentPassword($this->user())],
             'password' => ['required', 'string', 'confirmed', Password::defaults()],
         ];
     }
