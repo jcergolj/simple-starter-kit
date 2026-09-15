@@ -5,9 +5,12 @@ namespace App\Http\Controllers;
 use App\Http\Requests\SendInvitationRequest;
 use App\Mail\InvitationMail;
 use App\Models\Invitation;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Jcergolj\InAppNotifications\Facades\InAppNotification;
 
@@ -22,7 +25,22 @@ class InvitationController extends Controller
 
     public function store(SendInvitationRequest $request): RedirectResponse
     {
-        $invitation = Invitation::createFor($request->validated('email'));
+        $email = $request->validated('email');
+
+        try {
+            $invitation = DB::transaction(function () use ($email): Invitation {
+                $existingInvitation = Invitation::query()
+                    ->where('email', $email)
+                    ->lockForUpdate()
+                    ->first();
+
+                return $existingInvitation?->renew() ?? Invitation::createFor($email);
+            });
+        } catch (UniqueConstraintViolationException) {
+            throw ValidationException::withMessages([
+                'email' => __('An invitation for this email address was just created.'),
+            ]);
+        }
 
         Mail::to($invitation->email)->send(new InvitationMail($invitation));
 

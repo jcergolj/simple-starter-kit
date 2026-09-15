@@ -66,6 +66,19 @@ class InvitationTest extends TestCase
     }
 
     #[Test]
+    public function renew_invalidates_previous_token_and_reopens_invitation(): void
+    {
+        $invitation = Invitation::factory()->expired()->create();
+        $oldToken = $invitation->token;
+
+        $invitation->renew();
+
+        $this->assertNotSame($oldToken, $invitation->fresh()->token);
+        $this->assertNull($invitation->fresh()->accepted_at);
+        $this->assertTrue($invitation->fresh()->isPending());
+    }
+
+    #[Test]
     public function pending_scope_excludes_accepted(): void
     {
         Invitation::factory()->accepted()->create();

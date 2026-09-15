@@ -25,6 +25,17 @@ class Invitation extends Model
         ]);
     }
 
+    public function renew(): self
+    {
+        $this->update([
+            'token' => bin2hex(random_bytes(32)),
+            'accepted_at' => null,
+            'expires_at' => now()->addDays(7),
+        ]);
+
+        return $this;
+    }
+
     public function isPending(): bool
     {
         return is_null($this->accepted_at) && now()->lt($this->expires_at);
