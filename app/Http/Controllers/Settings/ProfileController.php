@@ -18,21 +18,27 @@ class ProfileController extends Controller
     {
         return view('settings.profile.edit', [
             'name' => $request->user()->name,
-            'email' => $request->user()->email,
+            'email' => $request->user()->pending_email ?? $request->user()->email,
         ]);
     }
 
     public function update(UpdateProfileRequest $request): RedirectResponse
     {
         $user = $request->user();
+        $attributes = $request->validated();
+        $oldEmail = $user->email;
 
-        $user->fill($request->validated());
+        $user->name = $attributes['name'];
 
-        if ($user->isDirty('email')) {
+        if ($attributes['email'] !== $user->email) {
+            $user->pending_email = $attributes['email'];
             $user->email_verified_at = null;
+            $user->save();
+            $user->sendEmailVerificationNotification();
+        } else {
+            $user->pending_email = null;
+            $user->save();
         }
-
-        $user->save();
 
         InAppNotification::success(__('Your profile has been updated.'));
 
