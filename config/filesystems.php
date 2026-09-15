@@ -73,7 +73,7 @@ return [
             'visibility' => 'private',
             'directory_visibility' => 'private',
             'port' => (int) env('SFTP_PORT', 22),
-            'root' => env('SFTP_ROOT', '/home/backup'),
+            'root' => getenv('SFTP_ROOT') ?: env('SFTP_ROOT', '/home/backup'),
         ],
 
     ],
