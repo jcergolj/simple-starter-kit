@@ -110,22 +110,24 @@ prompt_cloudflare() {
 }
 
 set_env_value() {
-    local key="$1" value="$2" escaped temporary line
+    local key="$1" value="$2" escaped temporary source_file line
     escaped="${value//\\/\\\\}"
     escaped="${escaped//\"/\\\"}"
     escaped="${escaped//\$/\\\$}"
 
     if sudo grep -qE "^${key}=" "$APP_FOLDER/shared/.env"; then
         temporary="$(mktemp)"
+        source_file="$(mktemp)"
+        sudo sed -n '1,$p' "$APP_FOLDER/shared/.env" > "$source_file"
         while IFS= read -r line || [[ -n "$line" ]]; do
             if [[ "$line" == "$key="* ]]; then
                 printf '%s\n' "${key}=\"${escaped}\""
             else
                 printf '%s\n' "$line"
             fi
-        done < "$APP_FOLDER/shared/.env" > "$temporary"
+        done < "$source_file" > "$temporary"
         sudo cp "$temporary" "$APP_FOLDER/shared/.env"
-        rm -f "$temporary"
+        rm -f "$temporary" "$source_file"
     else
         printf '%s\n' "${key}=\"${escaped}\"" |
             sudo tee -a "$APP_FOLDER/shared/.env" >/dev/null
