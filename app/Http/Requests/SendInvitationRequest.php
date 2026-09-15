@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
-use App\Actions\NormalizeEmail;
 use App\Models\Invitation;
 use App\Models\User;
+use App\ValueObjects\EmailAddress;
 use Illuminate\Validation\Rule;
 
 class SendInvitationRequest extends AppFormRequest
@@ -14,7 +14,7 @@ class SendInvitationRequest extends AppFormRequest
     protected function prepareForValidation(): void
     {
         if (is_string($email = $this->input('email'))) {
-            $this->merge(['email' => NormalizeEmail::normalize($email)]);
+            $this->merge(['email' => EmailAddress::from($email)->toString()]);
         }
     }
 

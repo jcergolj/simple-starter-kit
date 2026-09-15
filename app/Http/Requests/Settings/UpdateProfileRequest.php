@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Settings;
 
-use App\Actions\NormalizeEmail;
 use App\Http\Requests\AppFormRequest;
 use App\Models\User;
+use App\ValueObjects\EmailAddress;
 use Illuminate\Validation\Rule;
 
 class UpdateProfileRequest extends AppFormRequest
@@ -14,7 +14,7 @@ class UpdateProfileRequest extends AppFormRequest
     protected function prepareForValidation(): void
     {
         if (is_string($email = $this->input('email'))) {
-            $this->merge(['email' => NormalizeEmail::normalize($email)]);
+            $this->merge(['email' => EmailAddress::from($email)->toString()]);
         }
     }
 

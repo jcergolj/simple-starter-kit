@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
-use App\Actions\NormalizeEmail;
+use App\ValueObjects\EmailAddress;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -15,7 +15,7 @@ class NormalizeEmailInput
     {
         if (is_string($request->input('email'))) {
             $request->merge([
-                'email' => NormalizeEmail::normalize($request->input('email')),
+                'email' => EmailAddress::from($request->input('email'))->toString(),
             ]);
         }
 

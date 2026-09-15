@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use App\Actions\NormalizeEmail;
 use App\Enums\RoleEnum;
+use App\ValueObjects\EmailAddress;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -19,7 +19,7 @@ class Invitation extends Model
     public static function createFor(string $email, RoleEnum $role = RoleEnum::User, string $lang = 'en'): self
     {
         return self::create([
-            'email' => NormalizeEmail::normalize($email),
+            'email' => EmailAddress::from($email)->toString(),
             'role' => $role,
             'lang' => $lang,
             'token' => bin2hex(random_bytes(32)),
@@ -51,7 +51,7 @@ class Invitation extends Model
     protected function email(): Attribute
     {
         return Attribute::make(
-            set: NormalizeEmail::normalize(...),
+            set: fn (string $value): string => EmailAddress::from($value)->toString(),
         );
     }
 

@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
-use App\Actions\NormalizeEmail;
 use App\Enums\RoleEnum;
 use App\Mail\InvitationMail;
 use App\Models\Invitation;
 use App\Models\User;
+use App\ValueObjects\EmailAddress;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Hash;
@@ -62,7 +62,7 @@ class CreateUserCommand extends Command
             label: __('Email'),
             required: true,
             validate: ['email' => 'required|email|unique:users,email'],
-            transform: NormalizeEmail::normalize(...),
+            transform: fn (string $email): string => EmailAddress::from($email)->toString(),
         );
 
         $languages = array_map(
@@ -77,7 +77,7 @@ class CreateUserCommand extends Command
             options: $languages,
         );
 
-        $invitation = Invitation::createFor(NormalizeEmail::normalize($email), $role, $lang);
+        $invitation = Invitation::createFor(EmailAddress::from($email)->toString(), $role, $lang);
 
         App::setLocale($lang);
 
@@ -100,7 +100,7 @@ class CreateUserCommand extends Command
             label: __('Email'),
             required: true,
             validate: ['email' => 'required|email|unique:users,email'],
-            transform: NormalizeEmail::normalize(...),
+            transform: fn (string $email): string => EmailAddress::from($email)->toString(),
         );
 
         $password = password(
@@ -111,7 +111,7 @@ class CreateUserCommand extends Command
 
         User::create([
             'name' => $name,
-            'email' => NormalizeEmail::normalize($email),
+            'email' => EmailAddress::from($email)->toString(),
             'password' => Hash::make($password),
             'role' => $role,
             'email_verified_at' => now(),
