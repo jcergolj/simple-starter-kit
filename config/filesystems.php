@@ -69,6 +69,7 @@ return [
             'password' => env('SFTP_PASSWORD'),
             'privateKey' => env('SFTP_PRIVATE_KEY'),
             'passphrase' => env('SFTP_PASSPHRASE'),
+            'hostFingerprint' => env('SFTP_HOST_FINGERPRINT'),
             'visibility' => 'private',
             'directory_visibility' => 'private',
             'port' => (int) env('SFTP_PORT', 22),
