@@ -5,14 +5,16 @@ namespace App\Http\Controllers\Settings;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\DeleteProfileRequest;
 use App\Http\Requests\Settings\UpdateProfileRequest;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
+use Illuminate\View\View;
 use Jcergolj\InAppNotifications\Facades\InAppNotification;
 
 class ProfileController extends Controller
 {
-    public function edit(Request $request)
+    public function edit(Request $request): View
     {
         return view('settings.profile.edit', [
             'name' => $request->user()->name,
@@ -20,7 +22,7 @@ class ProfileController extends Controller
         ]);
     }
 
-    public function update(UpdateProfileRequest $request)
+    public function update(UpdateProfileRequest $request): RedirectResponse
     {
         $user = $request->user();
 
@@ -37,12 +39,12 @@ class ProfileController extends Controller
         return back();
     }
 
-    public function delete()
+    public function delete(): View
     {
         return view('settings.profile.delete');
     }
 
-    public function destroy(DeleteProfileRequest $request)
+    public function destroy(DeleteProfileRequest $request): RedirectResponse
     {
         $user = $request->user();
 
