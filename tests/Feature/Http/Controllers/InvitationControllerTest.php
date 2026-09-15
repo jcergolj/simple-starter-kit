@@ -137,11 +137,15 @@ class InvitationControllerTest extends TestCase
         ]);
 
         $response->assertRedirect(route('invitations.create'));
+
         $invitation->refresh();
 
         $this->assertNotSame($oldToken, $invitation->token);
+
         $this->assertTrue($invitation->isPending());
+
         $this->get(route('invitations.accept', $oldToken))->assertNotFound();
+
         Mail::assertSent(InvitationMail::class);
     }
 
@@ -160,11 +164,15 @@ class InvitationControllerTest extends TestCase
         ]);
 
         $response->assertRedirect(route('invitations.create'));
+
         $invitation->refresh();
 
         $this->assertNotSame($oldToken, $invitation->token);
+
         $this->assertNull($invitation->accepted_at);
+
         $this->assertTrue($invitation->isPending());
+
         $this->get(route('invitations.accept', $oldToken))->assertNotFound();
     }
 

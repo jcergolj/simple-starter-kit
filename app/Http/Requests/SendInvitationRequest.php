@@ -20,7 +20,9 @@ class SendInvitationRequest extends AppFormRequest
                 'max:255',
                 Rule::unique(Invitation::class)
                     ->whereNull('accepted_at')
-                    ->where(fn ($query) => $query->where('expires_at', '>', now())),
+                    ->where(function ($query) {
+                        return $query->where('expires_at', '>', now());
+                    }),
                 Rule::unique(User::class, 'email'),
             ],
         ];

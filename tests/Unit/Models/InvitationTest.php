@@ -74,7 +74,9 @@ class InvitationTest extends TestCase
         $invitation->renew();
 
         $this->assertNotSame($oldToken, $invitation->fresh()->token);
+
         $this->assertNull($invitation->fresh()->accepted_at);
+
         $this->assertTrue($invitation->fresh()->isPending());
     }
 

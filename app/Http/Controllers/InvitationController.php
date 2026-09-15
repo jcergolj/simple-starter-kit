@@ -29,8 +29,7 @@ class InvitationController extends Controller
 
         try {
             $invitation = DB::transaction(function () use ($email): Invitation {
-                $existingInvitation = Invitation::query()
-                    ->where('email', $email)
+                $existingInvitation = Invitation::where('email', $email)
                     ->lockForUpdate()
                     ->first();
 
