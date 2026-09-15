@@ -1,4 +1,6 @@
 <x-layouts.app :title="__('Enable Two-Factor Authentication')">
+    <x-turbo::exempts-page-from-cache />
+
     <section class="mx-auto w-full lg:max-w-xl">
         <x-back-link :href="route('settings.two-factor.edit')">{{ __('Two-factor authentication') }}</x-back-link>
         <x-text.heading size="xl">{{ __('Enable Two-Factor Authentication') }}</x-text.heading>
