@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Middleware\EnsureUserIsAdmin;
 use App\Http\Middleware\EnsureUserIsNotBlocked;
+use App\Http\Middleware\NormalizeEmailInput;
 use App\Http\Middleware\SetLocaleMiddleware;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -27,6 +28,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
         $middleware->web(append: [
             SetLocaleMiddleware::class,
+            NormalizeEmailInput::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

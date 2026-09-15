@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Actions\Fortify\ResetUserPassword;
 use App\Actions\Fortify\UpdateUserPassword;
 use App\Actions\Fortify\UpdateUserProfileInformation;
+use App\Actions\NormalizeEmail;
 use App\Models\User;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -67,7 +68,7 @@ class FortifyServiceProvider extends ServiceProvider
     private function configureFotifyActions(): void
     {
         Fortify::authenticateUsing(function (Request $request): ?User {
-            $user = User::where('email', $request->input('email'))->first();
+            $user = User::where('email', NormalizeEmail::normalize($request->input('email', '')))->first();
 
             if ($user?->isBlocked()) {
                 return null;

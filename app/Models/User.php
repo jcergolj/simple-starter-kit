@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Actions\NormalizeEmail;
 use App\DataTransferObjects\UserSettings;
 use App\Enums\RoleEnum;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -40,6 +41,13 @@ class User extends Authenticatable implements MustVerifyEmail
     public function initials(): string
     {
         return Str::of($this->name)->substr(0, 2)->upper();
+    }
+
+    protected function email(): Attribute
+    {
+        return Attribute::make(
+            set: fn (string $value): string => NormalizeEmail::normalize($value),
+        );
     }
 
     protected function settings(): Attribute

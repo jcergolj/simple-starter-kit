@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Actions\NormalizeEmail;
 use App\Enums\RoleEnum;
 use App\Mail\InvitationMail;
 use App\Models\Invitation;
@@ -61,6 +62,7 @@ class CreateUserCommand extends Command
             label: __('Email'),
             required: true,
             validate: ['email' => 'required|email|unique:users,email'],
+            transform: NormalizeEmail::normalize(...),
         );
 
         $languages = array_map(
@@ -75,7 +77,7 @@ class CreateUserCommand extends Command
             options: $languages,
         );
 
-        $invitation = Invitation::createFor($email, $role, $lang);
+        $invitation = Invitation::createFor(NormalizeEmail::normalize($email), $role, $lang);
 
         App::setLocale($lang);
 
@@ -98,6 +100,7 @@ class CreateUserCommand extends Command
             label: __('Email'),
             required: true,
             validate: ['email' => 'required|email|unique:users,email'],
+            transform: NormalizeEmail::normalize(...),
         );
 
         $password = password(
@@ -108,7 +111,7 @@ class CreateUserCommand extends Command
 
         User::create([
             'name' => $name,
-            'email' => $email,
+            'email' => NormalizeEmail::normalize($email),
             'password' => Hash::make($password),
             'role' => $role,
             'email_verified_at' => now(),

@@ -194,6 +194,21 @@ class UserControllerTest extends TestCase
     }
 
     #[Test]
+    public function admin_email_change_normalizes_the_email(): void
+    {
+        $user = User::factory()->create(['email' => 'old@example.com']);
+
+        $this->actingAs(User::factory()->admin()->create())
+            ->put(route('users.update', $user), [
+                'name' => $user->name,
+                'email' => '  New@Example.COM ',
+            ])
+            ->assertRedirect(route('users.index'));
+
+        $this->assertDatabaseHas('users', ['id' => $user->id, 'email' => 'new@example.com']);
+    }
+
+    #[Test]
     public function admin_can_update_user_with_same_email(): void
     {
         $admin = User::factory()->admin()->create();
