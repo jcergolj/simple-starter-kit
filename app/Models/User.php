@@ -42,8 +42,8 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function markEmailAsVerified(): bool
     {
-        if ($this->pending_email !== null) {
-            $this->email = $this->pending_email;
+        if ($this->pendingEmail() !== null) {
+            $this->email = $this->pendingEmail();
             $this->pending_email = null;
         }
 
@@ -52,16 +52,21 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function getEmailForVerification(): string
     {
-        return $this->pending_email ?? $this->email;
+        return $this->pendingEmail() ?? $this->email;
     }
 
     public function routeNotificationForMail(?Notification $notification = null): string
     {
-        if ($notification instanceof VerifyEmail && $this->pending_email !== null) {
-            return $this->pending_email;
+        if ($notification instanceof VerifyEmail && $this->pendingEmail() !== null) {
+            return $this->pendingEmail();
         }
 
         return $this->email;
+    }
+
+    public function pendingEmail(): ?string
+    {
+        return $this->attributes['pending_email'] ?? null;
     }
 
     public function initials(): string
