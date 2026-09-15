@@ -48,7 +48,7 @@ Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified', 'not_blocked'])
     ->name('dashboard');
 
-Route::middleware(['auth', 'verified', 'not_blocked'])->group(function () {
+Route::middleware(['auth', 'auth.session', 'verified', 'not_blocked'])->group(function () {
     Route::get('settings', [SettingsController::class, 'show'])->name('settings');
 
     Route::prefix('settings')->as('settings.')->group(function () {

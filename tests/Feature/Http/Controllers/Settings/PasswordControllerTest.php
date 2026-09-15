@@ -42,6 +42,14 @@ class PasswordControllerTest extends TestCase
     }
 
     #[Test]
+    public function password_routes_use_authenticated_session_middleware(): void
+    {
+        $route = app('router')->getRoutes()->getByName('settings.password.update');
+
+        $this->assertContains('auth.session', $route->middleware());
+    }
+
+    #[Test]
     public function update_updates_user_password(): void
     {
         $user = User::factory()->create([
