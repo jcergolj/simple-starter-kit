@@ -11,12 +11,12 @@ use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 
 class CurrentPassword implements ValidationRule
 {
-    private const MAX_ATTEMPTS = 5;
+    private const int MAX_ATTEMPTS = 5;
 
-    private const DECAY_SECONDS = 60;
+    private const int DECAY_SECONDS = 60;
 
     public function __construct(
-        private User $user,
+        private readonly User $user,
     ) {}
 
     public function validate(string $attribute, mixed $value, Closure $fail): void
