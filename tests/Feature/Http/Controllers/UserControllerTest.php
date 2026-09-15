@@ -8,7 +8,9 @@ use App\Enums\RoleEnum;
 use App\Http\Controllers\UserController;
 use App\Http\Requests\UpdateUserRequest;
 use App\Models\User;
+use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 use Jcergolj\FormRequestAssertions\TestableFormRequest;
 use Jcergolj\InAppNotifications\Facades\InAppNotification;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -26,6 +28,7 @@ class UserControllerTest extends TestCase
         parent::setUp();
 
         InAppNotification::fake();
+        Notification::fake();
     }
 
     #[Test]
@@ -170,6 +173,27 @@ class UserControllerTest extends TestCase
     }
 
     #[Test]
+    public function admin_email_change_resets_verification_and_sends_verification_notification(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $user = User::factory()->create([
+            'email' => 'old@example.com',
+            'email_verified_at' => now(),
+        ]);
+
+        $response = $this->actingAs($admin)->put(route('users.update', $user), [
+            'name' => $user->name,
+            'email' => 'new@example.com',
+        ]);
+
+        $response->assertRedirect(route('users.index'));
+
+        $this->assertNull($user->refresh()->email_verified_at);
+
+        Notification::assertSentTo($user, VerifyEmail::class);
+    }
+
+    #[Test]
     public function admin_can_update_user_with_same_email(): void
     {
         $admin = User::factory()->admin()->create();
@@ -183,6 +207,8 @@ class UserControllerTest extends TestCase
         $response->assertRedirect(route('users.index'));
 
         InAppNotification::assertSuccess(__('User updated.'));
+
+        Notification::assertNotSentTo($user, VerifyEmail::class);
     }
 
     #[Test]
