@@ -90,10 +90,7 @@
             "Composer\\Config::disableProcessTimeout",
             "overmind start"
         ],
-        "test": [
-            "@php artisan config:clear --ansi",
-            "@php artisan test"
-        ],
+        "test": "@php artisan test",
         "phpstan": "./vendor/bin/phpstan analyse --memory-limit=2G",
         "env-sync": "php artisan envy:sync --dry",
         "env-prune": "php artisan envy:prune --dry",
