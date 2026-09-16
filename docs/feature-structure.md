@@ -18,6 +18,6 @@ Feature-specific jobs and actions belong in that feature's `Jobs` or `Actions` d
 
 ## Routes and Views
 
-Put feature routes in `<Feature>/Routes/web.php` and explicitly require that file from `routes/web.php`. Keep the feature's middleware, prefixes, and route names in its route file.
+Put feature routes in `<Feature>/Routes/web.php` and register that file in the `then` callback of `bootstrap/app.php` using `Route::middleware('web')->group(...)`. Keep the feature's middleware, prefixes, and route names in its route file.
 
 Register a feature's Blade directory in `app/Providers/FeatureServiceProvider.php` with `View::addNamespace()`, then reference views with the namespace, for example `settings::profile.edit`.

@@ -106,10 +106,12 @@ Shared application types stay in conventional Laravel locations such as `app/Mod
 
 ### Adding feature routes and views
 
-Create the feature route file at `app/Features/<Feature>/Routes/web.php`, then explicitly include it from `routes/web.php`:
+Create the feature route file at `app/Features/<Feature>/Routes/web.php`, then register it in the `then` callback of `bootstrap/app.php`:
 
 ```php
-require base_path('app/Features/Billing/Routes/web.php');
+Route::middleware('web')->group(
+    base_path('app/Features/Billing/Routes/web.php')
+);
 ```
 
 Register the feature's views in `app/Providers/FeatureServiceProvider.php`:
