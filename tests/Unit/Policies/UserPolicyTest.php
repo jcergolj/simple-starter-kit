@@ -21,7 +21,9 @@ class UserPolicyTest extends TestCase
         $policy = new UserPolicy;
 
         $this->assertTrue($policy->update($admin, $user));
+
         $this->assertTrue($policy->delete($admin, $user));
+
         $this->assertTrue($policy->block($admin, $user));
     }
 
@@ -33,7 +35,9 @@ class UserPolicyTest extends TestCase
         $policy = new UserPolicy;
 
         $this->assertFalse($policy->update($admin, $admin));
+
         $this->assertFalse($policy->delete($admin, $otherAdmin));
+
         $this->assertFalse($policy->block($admin, $otherAdmin));
     }
 }

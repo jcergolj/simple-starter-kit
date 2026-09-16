@@ -2,8 +2,8 @@
 
 namespace App\Features\Invitations\Controllers;
 
-use App\Features\Invitations\Requests\AcceptInvitationRequest;
 use App\DataTransferObjects\UserSettings;
+use App\Features\Invitations\Requests\AcceptInvitationRequest;
 use App\Http\Controllers\Controller;
 use App\Models\Invitation;
 use App\Models\User;

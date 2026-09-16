@@ -18,8 +18,7 @@ class SendInvitation
     {
         try {
             $invitation = DB::transaction(function () use ($email, $role, $lang): Invitation {
-                $existingInvitation = Invitation::query()
-                    ->where('email', $email)
+                $existingInvitation = Invitation::where('email', $email)
                     ->lockForUpdate()
                     ->first();
 
