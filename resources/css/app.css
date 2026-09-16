@@ -1,7 +1,8 @@
 @import 'tailwindcss';
 @import './turbo-loading.css';
 
-@source "../views";
+@source "../app/Features";
+@source "../resources/views";
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 
 @plugin "./tailwind/daisyui.js" {

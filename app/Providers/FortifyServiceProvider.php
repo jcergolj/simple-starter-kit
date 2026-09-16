@@ -2,9 +2,7 @@
 
 namespace App\Providers;
 
-use App\Actions\Fortify\ResetUserPassword;
-use App\Actions\Fortify\UpdateUserPassword;
-use App\Actions\Fortify\UpdateUserProfileInformation;
+use App\Features\Authentication\Actions\Fortify\ResetUserPassword;
 use App\Models\User;
 use App\Rules\CurrentPassword;
 use App\ValueObjects\EmailAddress;
@@ -34,22 +32,22 @@ class FortifyServiceProvider extends ServiceProvider
     private function configureFortifyViews(): void
     {
         Fortify::twoFactorChallengeView(function () {
-            return view('auth.two-factor-challenge');
+            return view('authentication::two-factor-challenge');
         });
         Fortify::confirmPasswordView(function () {
-            return view('auth.confirm-password');
+            return view('authentication::confirm-password');
         });
         Fortify::loginView(function () {
-            return view('auth.login');
+            return view('authentication::login');
         });
         Fortify::verifyEmailView(function () {
-            return view('auth.verify-email');
+            return view('authentication::verify-email');
         });
         Fortify::resetPasswordView(function () {
-            return view('auth.reset-password');
+            return view('authentication::reset-password');
         });
         Fortify::requestPasswordResetLinkView(function () {
-            return view('auth.forgot-password');
+            return view('authentication::forgot-password');
         });
     }
 
@@ -79,8 +77,6 @@ class FortifyServiceProvider extends ServiceProvider
                 ? $user
                 : null;
         });
-        Fortify::updateUserProfileInformationUsing(UpdateUserProfileInformation::class);
-        Fortify::updateUserPasswordsUsing(UpdateUserPassword::class);
         Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
         Fortify::confirmPasswordsUsing(function (User $user, ?string $password): bool {
             return (new CurrentPassword($user))->verify($password);

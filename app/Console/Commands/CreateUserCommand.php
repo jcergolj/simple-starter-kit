@@ -5,14 +5,11 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Enums\RoleEnum;
-use App\Mail\InvitationMail;
-use App\Models\Invitation;
+use App\Features\Invitations\Actions\SendInvitation;
 use App\Models\User;
 use App\ValueObjects\EmailAddress;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
 
 use function Laravel\Prompts\password;
 use function Laravel\Prompts\select;
@@ -23,6 +20,11 @@ class CreateUserCommand extends Command
     protected $signature = 'app:create-user';
 
     protected $description = 'Create a user or send an invitation';
+
+    public function __construct(private readonly SendInvitation $sendInvitation)
+    {
+        parent::__construct();
+    }
 
     public function handle(): int
     {
@@ -79,11 +81,7 @@ class CreateUserCommand extends Command
             options: $languages,
         );
 
-        $invitation = Invitation::createFor(EmailAddress::from($email)->toString(), $role, $lang);
-
-        App::setLocale($lang);
-
-        Mail::to($invitation->email)->send(new InvitationMail($invitation));
+        $this->sendInvitation->handle(EmailAddress::from($email)->toString(), $role, $lang);
 
         $this->components->info(__('Invitation sent successfully.'));
 
