@@ -89,6 +89,39 @@ composer run rector    # automated refactoring
 composer run phpstan   # static analysis
 ```
 
+## Project structure
+
+Application behavior is organized by feature under `app/Features`:
+
+```text
+app/Features/
+├── Authentication/   # Fortify actions and authentication views
+├── Dashboard/        # Dashboard route and view
+├── Invitations/      # Invitation controllers, actions, mail, routes, and views
+├── Settings/         # Account settings controllers, requests, routes, and views
+└── UserManagement/   # User administration controllers, requests, routes, and views
+```
+
+Shared application types stay in conventional Laravel locations such as `app/Models`, `app/Enums`, `app/DataTransferObjects`, `app/Policies`, and `app/ValueObjects`.
+
+### Adding feature routes and views
+
+Create the feature route file at `app/Features/<Feature>/Routes/web.php`, then register it in the `then` callback of `bootstrap/app.php`:
+
+```php
+Route::middleware('web')->group(
+    base_path('app/Features/Billing/Routes/web.php')
+);
+```
+
+Register the feature's views in `app/Providers/FeatureServiceProvider.php`:
+
+```php
+View::addNamespace('billing', base_path('app/Features/Billing/Views'));
+```
+
+Reference those views through the namespace, for example `view('billing::index')`. Keep feature middleware, route names, and prefixes in the feature route file. Tailwind scans `app/Features` automatically, so feature view classes are included in CSS builds.
+
 ## Theme Customization
 
 This application uses:

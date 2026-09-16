@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Providers\AppServiceProvider;
+use App\Providers\FeatureServiceProvider;
 use App\Providers\FortifyServiceProvider;
 use App\Providers\HorizonServiceProvider;
 use App\Providers\ModelServiceProvider;
@@ -11,6 +12,7 @@ use App\Providers\TurboServiceProvider;
 
 return [
     AppServiceProvider::class,
+    FeatureServiceProvider::class,
     FortifyServiceProvider::class,
     HorizonServiceProvider::class,
     ModelServiceProvider::class,
