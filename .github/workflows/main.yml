@@ -37,17 +37,3 @@ jobs:
   trufflehog-scan:
     name: "trufflehog scan"
     uses: jcergolj/reusable-github-actions/.github/workflows/trufflehog-scan.yml@master
-
-  deploy:
-    if: github.ref == 'refs/heads/master'
-    name: "deploy"
-    needs:
-      - code-formatter
-      - larastan
-      - envy
-      - tests
-      - phpmd
-      - gitleaks
-      - trufflehog-scan
-    uses: jcergolj/reusable-github-actions/.github/workflows/deploy-only.yml@v3
-    secrets: inherit
