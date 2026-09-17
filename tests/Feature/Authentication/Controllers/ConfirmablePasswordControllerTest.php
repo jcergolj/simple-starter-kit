@@ -72,7 +72,7 @@ class ConfirmablePasswordControllerTest extends TestCase
             'current_password' => 'current-password',
             'password' => 'new-password',
             'password_confirmation' => 'new-password',
-        ])->assertStatus(429);
+        ])->assertTooManyRequests();
 
         $this->assertTrue(Hash::check('current-password', $user->refresh()->password));
     }

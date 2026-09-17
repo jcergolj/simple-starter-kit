@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tests\Feature\Commands;
+namespace Tests\Feature\UserManagement\Commands;
 
 use App\Enums\RoleEnum;
 use App\Features\Invitations\Mail\InvitationMail;
