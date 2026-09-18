@@ -216,6 +216,47 @@ Review the generated Metator configuration before provisioning. The repository's
 
 Metator expects the server bootstrap files, including `scripts/server-bootstrap.sh`, `scripts/steps/`, `scripts/lib/`, and the related metadata files, to be available in the configured repository.
 
+### Add a custom Metator script
+
+Add custom server setup logic as a step in `scripts/steps/`. Step files are sourced automatically, sorted by `@order`, and run during provisioning. Use the following structure:
+
+```bash
+#!/usr/bin/env bash
+# @id: custom-service
+# @title: Configure custom service
+# @group: services
+# @required: false
+# @default: true
+# @order: 120
+
+step_custom_service() {
+    require_commands systemctl
+
+    install -m 0644 "$SCRIPT_DIR/config/custom-service.service" \
+        /etc/systemd/system/custom-service.service
+    systemctl daemon-reload
+    systemctl enable --now custom-service.service
+}
+```
+
+Use a unique kebab-case `@id`; the runner calls the matching function named `step_<id>` with hyphens replaced by underscores. Every custom step must define `@id`, `@title`, `@group`, `@required`, `@default`, and numeric `@order`. Keep reusable helpers in `scripts/lib/common.sh` only when they are shared by multiple steps.
+
+Make the script executable and commit it, together with any configuration files it installs:
+
+```bash
+chmod +x scripts/steps/12-custom-service.sh
+git add scripts/steps/12-custom-service.sh scripts/config/custom-service.service
+git commit -m "Add custom server provisioning step"
+```
+
+Run the appropriate Metator operation to apply the step:
+
+```bash
+php artisan metator:provision --config=metator.production.php
+```
+
+Steps are sourced for all operations. If a custom step should run only during provisioning, guard its body with `[[ "$METATOR_OPERATION" == provision ]]` or return early for other operations. Keep secrets in the environment or the shared `.env`, never in the script or repository.
+
 ### Prepare and provision the server
 
 Prepare the Ubuntu server first:
