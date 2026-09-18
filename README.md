@@ -194,113 +194,102 @@ php artisan tailwindcss:watch --no-tty
 
 ## Deployment
 
-This project is designed to be deployed on an Ubuntu server with Caddy. The deployment scripts live in the `scripts/` directory.
+This project is designed to be deployed on an Ubuntu server with Caddy. Server provisioning is managed by [Metator for Laravel](https://github.com/jcergolj/metator-for-laravel), and application releases are deployed with Deployer using `deploy.php`.
 
-### Prerequisites
+### Local prerequisites
 
-- Ubuntu server
-- PHP 8.5 FPM
+- PHP 8.5+
 - Composer
-- Caddy
 - Git
-- curl
-- Cloudflare account with API token (DNS edit permission) and Zone ID
-- `redis-server` and `supervisor` (optional, for queue workers)
+- SSH access to the target Ubuntu server
 
-### First-time server setup
+### Install Metator
 
-Generate a deploy key on the server and add it to the GitHub repository:
+Install Metator in the application that will manage the server and site configuration:
+
+```bash
+composer require jcergolj/metator-for-laravel
+php artisan metator:install --no-interaction
+```
+
+Review the generated Metator configuration before provisioning. The repository's server bootstrap definition is in `scripts/server-bootstrap.sh`; update its site values and capabilities for the target server when necessary.
+
+Metator expects the server bootstrap files, including `scripts/server-bootstrap.sh`, `scripts/steps/`, `scripts/lib/`, and the related metadata files, to be available in the configured repository.
+
+### Prepare and provision the server
+
+Prepare the Ubuntu server first:
+
+```bash
+php artisan metator:prepare-server --config=metator.production.php
+```
+
+Then provision the configured site:
+
+```bash
+php artisan metator:provision --config=metator.production.php
+```
+
+The provisioning flow installs and configures the services selected in the Metator configuration, including PHP-FPM, Caddy, the scheduler, Redis, and Supervisor/Horizon when enabled. It also creates the deploy user, configures repository access, DNS, application directories, permissions, and service definitions.
+
+Generate a deploy key for the configured deploy user and add its public key to the GitHub repository as a deploy key if Metator has not already configured repository access:
 
 ```bash
 ssh-keygen -t ed25519 -C "deploy@server"
 cat ~/.ssh/id_ed25519.pub
 ```
 
-Add the key at **Settings -> Deploy keys -> Add deploy key** in the repository, then clone:
+### Configure the application environment
 
 ```bash
-sudo mkdir -p /var/www/starter-kit
-sudo chown $(whoami):$(whoami) /var/www/starter-kit
-git clone git@github.com:jcergolj/starter-kit.git /var/www/starter-kit
+php artisan metator:update-environment --config=metator.production.php
 ```
 
-Install `sshpass`:
+Ensure the production environment contains the required values, including:
+
+- `APP_URL`
+- database and cache settings
+- mail and Brevo settings
+- queue/Horizon settings
+- backup settings
+
+### Deploy application releases
+
+Install the deployment dependencies locally:
 
 ```bash
-sudo apt install sshpass
+composer install
 ```
 
-Run the interactive setup script:
+Deploy the `deploy` branch with Deployer:
 
 ```bash
-bash scripts/setup.sh
+vendor/bin/dep deploy production
 ```
 
-You will be prompted for:
+The deployment defined in `deploy.php` verifies the Metator PHP runtime, installs Composer dependencies, builds Tailwind, runs migrations, caches Laravel configuration, and restarts/verifies configured queue or Horizon workers.
 
-- **APP_NAME** — directory name and Caddy log identifier (e.g. `ba`)
-- **DOMAIN** — the site domain (e.g. `ba.example.com`)
-- **GITHUB_REPO** — repository URL to clone
-- **CLOUDFLARE_API_TOKEN** — token with DNS edit permission
-- **CLOUDFLARE_ZONE_ID** — from the Cloudflare dashboard
-- **SERVER_IP** — auto-detected via `ifconfig.me`, confirm or override
-
-The script will:
-
-1. Install PHP extensions (sqlite3, gd, exif) and restart PHP-FPM
-2. Create a proxied Cloudflare DNS A record
-3. Clone the repository to `/var/www/{APP_NAME}`
-4. Append a site block to `/etc/caddy/Caddyfile` and reload Caddy
-5. Run Laravel setup (composer install, key generation, migrations, storage link, Tailwind build, importmap optimize)
-6. Set ownership to `www-data` and fix permissions on storage, cache, and database directories
-7. Build Laravel caches (config, routes, views, events)
-8. Offer to open `.env` for editing
-
-### Queue workers with Supervisor (optional)
-
-During `setup.sh`, you will be asked whether to install Supervisor for running Laravel queue workers with Redis. If you choose yes, the script will:
-
-1. Install `supervisor` and `redis-server`
-2. Create a Supervisor config at `/etc/supervisor/conf.d/{APP_NAME}-worker.conf`
-3. Start the queue worker process
-
-Manage the worker after setup:
+For a dry run:
 
 ```bash
-# Check status
-sudo supervisorctl status {APP_NAME}-worker:*
-
-# Restart after code changes (deploy.sh handles this automatically)
-sudo supervisorctl restart {APP_NAME}-worker:*
-
-# View logs
-tail -f /var/www/{APP_NAME}/storage/logs/worker.log
+vendor/bin/dep deploy production --dry-run
 ```
 
-### Subsequent deploys
+### Server services
 
-Run the non-interactive deploy script from the project directory or pass the path as an argument:
+Metator configures these services according to the site configuration:
+
+- scheduler cron running `php artisan schedule:run` every minute
+- Caddy serving the application domain
+- PHP-FPM using the configured PHP version
+- Supervisor running either `queue:work` or Horizon when enabled
+- Redis when required by the queue configuration
+
+Check worker status on the server with:
 
 ```bash
-# From the project directory
-cd /var/www/starter-kit
-bash deploy.sh
-
-# Or pass the path
-bash deploy.sh /var/www/starter-kit
+sudo supervisorctl status <site-id>-worker:*
 ```
-
-The script will:
-
-1. Put the application into maintenance mode
-2. Pull the latest changes from `main`
-3. Install Composer dependencies (no dev)
-4. Run database migrations
-5. Build Tailwind CSS and optimize the importmap
-6. Rebuild Laravel caches (config, routes, views, events)
-7. Fix file permissions
-8. Reload PHP-FPM
-9. Bring the application back online
 
 ### GitHub Actions
 
