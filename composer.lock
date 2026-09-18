@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c5b1ecb1b2a77c4bc370ec851af1c11f",
+    "content-hash": "a30d380bb7e486be0ade9091f4a72e9f",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -10197,25 +10197,26 @@
         },
         {
             "name": "jcergolj/rector-for-laravel",
-            "version": "v3",
+            "version": "dev-master",
             "source": {
                 "type": "git",
                 "url": "https://github.com/jcergolj/rector-for-laravel.git",
-                "reference": "22cc21395924d39941e4df3d9d053f185ebd4d52"
+                "reference": "9bf22925764aab5e2254281ec81d992cc95394c6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/jcergolj/rector-for-laravel/zipball/22cc21395924d39941e4df3d9d053f185ebd4d52",
-                "reference": "22cc21395924d39941e4df3d9d053f185ebd4d52",
+                "url": "https://api.github.com/repos/jcergolj/rector-for-laravel/zipball/9bf22925764aab5e2254281ec81d992cc95394c6",
+                "reference": "9bf22925764aab5e2254281ec81d992cc95394c6",
                 "shasum": ""
             },
             "require": {
-                "driftingly/rector-laravel": "2.*"
+                "driftingly/rector-laravel": "^2.5"
             },
             "require-dev": {
-                "laravel/pint": "^1.29",
+                "laravel/pint": "^1.30",
                 "phpunit/phpunit": "^13.0"
             },
+            "default-branch": true,
             "type": "library",
             "extra": {
                 "laravel": {
@@ -10241,9 +10242,9 @@
             "description": "Rector rules for Laravel projects",
             "support": {
                 "issues": "https://github.com/jcergolj/rector-for-laravel/issues",
-                "source": "https://github.com/jcergolj/rector-for-laravel/tree/v3"
+                "source": "https://github.com/jcergolj/rector-for-laravel/tree/master"
             },
-            "time": "2026-08-24T10:18:00+00:00"
+            "time": "2026-08-24T10:22:27+00:00"
         },
         {
             "name": "jean85/pretty-package-versions",
@@ -14253,6 +14254,7 @@
     "minimum-stability": "stable",
     "stability-flags": {
         "jcergolj/http-client-generator-for-laravel": 20,
+        "jcergolj/rector-for-laravel": 20,
         "pdepend/pdepend": 20,
         "phpmd/phpmd": 20
     },

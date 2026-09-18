@@ -37,7 +37,7 @@
         "jcergolj/http-client-generator-for-laravel": "dev-master",
         "jcergolj/laravel-form-request-assertions": "^1.5",
         "jcergolj/laravel-view-test-assertions": "^2.7",
-        "jcergolj/rector-for-laravel": "3",
+        "jcergolj/rector-for-laravel": "dev-master",
         "larastan/larastan": "^3.0",
         "laravel/boost": "^2.2",
         "laravel/pail": "^1.2.2",
