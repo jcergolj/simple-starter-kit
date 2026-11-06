@@ -21,7 +21,24 @@ A Laravel 13 starter kit for building business automation tools. It ships with a
 - Node.js is **not** required — Tailwind and importmap are handled by Laravel packages
 - Git
 - SQLite for local development, or MySQL/PostgreSQL for production
-- Overmind and tmux for `composer run dev`; alternatively, run the `Procfile` commands in separate terminals
+- [Overmind](https://github.com/DarthSim/overmind#installation) and [tmux](https://github.com/tmux/tmux/wiki/Installing) for `composer run dev`; alternatively, use the separate-terminal commands below
+
+### Install the development process manager
+
+Install tmux first, then Overmind, and ensure both executables are on your `PATH`. On macOS with Homebrew:
+
+```bash
+brew install tmux overmind
+```
+
+On Ubuntu/Debian, install tmux with `sudo apt-get install tmux`, then download the appropriate Linux binary from the [Overmind releases](https://github.com/DarthSim/overmind/releases/latest), extract it, and place `overmind` in a directory on your `PATH`. See the linked installation guides for other platforms; Overmind supports Linux, BSD, and macOS.
+
+Verify both commands are available before starting development:
+
+```bash
+tmux -V
+overmind --version
+```
 
 ## Local development
 
@@ -60,11 +77,33 @@ php artisan tailwindcss:build --no-tty
 php artisan storage:link
 ```
 
-6. Start the development server:
+6. Start the development processes from the project root:
 
 ```bash
 composer run dev
 ```
+
+Both `composer run dev` and `composer run dev:overmind` run `overmind start`, which starts all four processes in `Procfile`. Stop them together with `Ctrl+C`.
+
+If you do not want to install Overmind and tmux, run each of these `Procfile` commands in its own terminal from the project root instead:
+
+```bash
+php artisan serve --host=0.0.0.0 --no-reload
+```
+
+```bash
+php artisan pail --timeout=0
+```
+
+```bash
+php artisan queue:listen --tries=1
+```
+
+```bash
+php artisan tailwindcss:watch --no-tty
+```
+
+Stop each command with `Ctrl+C` in its terminal.
 
 The application will be available at `http://starter-kit.test` (or the URL configured in `APP_URL`).
 
