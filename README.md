@@ -1,6 +1,6 @@
 # Business Automation Starter Kit
 
-A Laravel 13 starter kit for building business automation tools. It ships with authentication, queues, real-time page updates via Hotwire, and a production-ready deployment pipeline for Ubuntu servers.
+A Laravel 13 starter kit for building business automation tools. It ships with authentication, queues, and real-time page updates via Hotwire. Production provisioning and deployment automation must be supplied separately.
 
 ## What’s included
 
@@ -16,19 +16,20 @@ A Laravel 13 starter kit for building business automation tools. It ships with a
 
 ## Requirements
 
-- PHP 8.4.1+ (production uses 8.5 FPM)
+- PHP 8.4.1+ (check `composer.lock` for the installed dependencies' requirements)
 - Composer
 - Node.js is **not** required — Tailwind and importmap are handled by Laravel packages
 - Git
 - SQLite for local development, or MySQL/PostgreSQL for production
+- Overmind and tmux for `composer run dev`; alternatively, run the `Procfile` commands in separate terminals
 
 ## Local development
 
 1. Clone the repository:
 
 ```bash
-git clone git@github.com:jcergolj/starter-kit.git
-cd starter-kit
+git clone git@github.com:jcergolj/simple-starter-kit.git
+cd simple-starter-kit
 ```
 
 2. Install dependencies and create the environment file:
@@ -194,102 +195,32 @@ php artisan tailwindcss:watch --no-tty
 
 ## Deployment
 
-This project is designed to be deployed on an Ubuntu server with Caddy. Server provisioning is managed by [Metator for Laravel](https://github.com/jcergolj/metator-for-laravel), and application releases are deployed with Deployer using `deploy.php`.
+### What this repository provides
 
-### Local prerequisites
+This repository provides the Laravel application, its Composer lockfile, environment template, migrations, and asset sources. Follow **Local development** above to install and check the application from a clean checkout.
 
-- PHP 8.5+
-- Composer
-- Git
-- SSH access to the target Ubuntu server
+It does **not** include server provisioning definitions (`scripts/server-bootstrap.sh`, `scripts/steps/`, or `scripts/lib/`), a Metator configuration, or a Deployer recipe (`deploy.php`). Neither Metator nor Deployer is a Composer dependency here; `composer install` does not provide `vendor/bin/dep`. There is no bundled production deployment command or deployment dry run.
 
-### Install Metator
+### Supply production infrastructure separately
 
-Install Metator in the application that will manage the server and site configuration:
+Choose a managed Laravel hosting service or maintain your own infrastructure and release automation. Provisioning definitions, server configuration, credentials, and deployment tooling must come from that service or your own infrastructure repository—not from this starter kit.
 
-```bash
-composer require jcergolj/metator-for-laravel
-php artisan metator:install --no-interaction
-```
+[Metator for Laravel](https://github.com/jcergolj/metator-for-laravel) is an optional external provisioning tool, not part of this application's setup. If you choose it, follow its documentation and supply the bootstrap definitions and site configuration it requires in your infrastructure project. Installing Metator alone does not restore the missing definitions in this repository.
 
-Review the generated Metator configuration before provisioning. The repository's server bootstrap definition is in `scripts/server-bootstrap.sh`; update its site values and capabilities for the target server when necessary.
+If you choose Deployer, install it in your deployment tooling project and write a recipe for your infrastructure before using its deployment or dry-run commands. No release branch, target host, service names, or worker restart hooks are defined here.
 
-Metator expects the server bootstrap files, including `scripts/server-bootstrap.sh`, `scripts/steps/`, `scripts/lib/`, and the related metadata files, to be available in the configured repository.
+### Production readiness checklist
 
-### Prepare and provision the server
+Your hosting configuration and release process are responsible for:
 
-Prepare the Ubuntu server first:
+- Providing a PHP runtime and extensions compatible with `composer.lock`, a web server serving only `public/`, and the required database, cache, and queue services.
+- Managing the production environment and application key securely, with `APP_ENV=production`, `APP_DEBUG=false`, the correct `APP_URL`, and database, mail, queue, and backup settings.
+- Installing production Composer dependencies, building Tailwind assets, and configuring writable storage and the public storage link.
+- Backing up data, applying migrations, and refreshing Laravel caches as appropriate for the release.
+- Configuring the scheduler and persistent workers, restarting workers after releases, and checking application health.
+- Defining rollback/recovery procedures and validating the chosen automation in staging, including a dry run if that tooling supports one.
 
-```bash
-php artisan metator:prepare-server --config=metator.production.php
-```
-
-Then provision the configured site:
-
-```bash
-php artisan metator:provision --config=metator.production.php
-```
-
-The provisioning flow installs and configures the services selected in the Metator configuration, including PHP-FPM, Caddy, the scheduler, Redis, and Supervisor/Horizon when enabled. It also creates the deploy user, configures repository access, DNS, application directories, permissions, and service definitions.
-
-Generate a deploy key for the configured deploy user and add its public key to the GitHub repository as a deploy key if Metator has not already configured repository access:
-
-```bash
-ssh-keygen -t ed25519 -C "deploy@server"
-cat ~/.ssh/id_ed25519.pub
-```
-
-### Configure the application environment
-
-```bash
-php artisan metator:update-environment --config=metator.production.php
-```
-
-Ensure the production environment contains the required values, including:
-
-- `APP_URL`
-- database and cache settings
-- mail and Brevo settings
-- queue/Horizon settings
-- backup settings
-
-### Deploy application releases
-
-Install the deployment dependencies locally:
-
-```bash
-composer install
-```
-
-Deploy the `deploy` branch with Deployer:
-
-```bash
-vendor/bin/dep deploy production
-```
-
-The deployment defined in `deploy.php` verifies the Metator PHP runtime, installs Composer dependencies, builds Tailwind, runs migrations, caches Laravel configuration, and restarts/verifies configured queue or Horizon workers.
-
-For a dry run:
-
-```bash
-vendor/bin/dep deploy production --dry-run
-```
-
-### Server services
-
-Metator configures these services according to the site configuration:
-
-- scheduler cron running `php artisan schedule:run` every minute
-- Caddy serving the application domain
-- PHP-FPM using the configured PHP version
-- Supervisor running either `queue:work` or Horizon when enabled
-- Redis when required by the queue configuration
-
-Check worker status on the server with:
-
-```bash
-sudo supervisorctl status <site-id>-worker:*
-```
+These are operator responsibilities, not steps performed by a bundled recipe. The local development `Procfile` is not a production service configuration.
 
 ### GitHub Actions
 
