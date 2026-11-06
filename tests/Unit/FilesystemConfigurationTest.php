@@ -4,11 +4,31 @@ declare(strict_types=1);
 
 namespace Tests\Unit;
 
+use Illuminate\Filesystem\AwsS3V3Adapter;
+use Illuminate\Support\Facades\Storage;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class FilesystemConfigurationTest extends TestCase
 {
+    #[Test]
+    public function s3_disk_resolves_without_contacting_aws(): void
+    {
+        config([
+            'filesystems.disks.s3.key' => 'test-key',
+            'filesystems.disks.s3.secret' => 'test-secret',
+            'filesystems.disks.s3.region' => 'us-east-1',
+            'filesystems.disks.s3.bucket' => 'test-bucket',
+            'filesystems.disks.s3.http_handler' => function (): never {
+                $this->fail('Resolving the S3 disk must not contact AWS.');
+            },
+        ]);
+
+        $disk = Storage::disk('s3');
+
+        $this->assertInstanceOf(AwsS3V3Adapter::class, $disk);
+    }
+
     #[Test]
     public function sftp_root_uses_the_configured_environment_value(): void
     {
