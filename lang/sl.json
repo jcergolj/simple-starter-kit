@@ -136,5 +136,7 @@
     "Are you sure you want to unblock this user?": "Ali ste prepričani, da želite odblokirati tega uporabnika?",
     "Are you sure you want to delete this user?": "Ali ste prepričani, da želite izbrisati tega uporabnika?",
     "Horizon": "Horizon",
-    "Logs": "Dnevniki"
+    "Logs": "Dnevniki",
+    "Your new email address is awaiting verification.": "Vaš novi e-poštni naslov čaka na potrditev.",
+    "Your current email address is :email. To cancel the pending change, enter this address and save.": "Vaš trenutni e-poštni naslov je :email. Za preklic spremembe vnesite ta naslov in shranite."
 }

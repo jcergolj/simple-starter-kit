@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\URL;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\TestWith;
 use Tests\TestCase;
 
 #[CoversClass(ProfileController::class)]
@@ -84,13 +85,209 @@ class ProfileControllerTest extends TestCase
         $response->assertRedirect();
 
         $user->refresh();
-        $this->assertNull($user->email_verified_at);
+        $this->assertNotNull($user->email_verified_at);
 
         $this->assertSame('new@example.com', $user->pending_email);
 
         Notification::assertSentTo($user, VerifyEmail::class);
 
         Notification::assertSentTo($user, EmailChangedNotification::class);
+    }
+
+    #[Test]
+    public function a_user_can_follow_the_redirect_and_correct_a_pending_email(): void
+    {
+        $user = User::factory()->create(['email' => 'old@example.com']);
+
+        $verifiedAt = $user->email_verified_at->toDateTimeString();
+
+        $this->actingAs($user)->post(route('password.confirm.store'), [
+            'password' => 'password',
+        ])->assertValid();
+
+        $response = $this->from(route('settings.profile.edit'))
+            ->patch(route('settings.profile.update'), [
+                'name' => $user->name,
+                'email' => 'typo@example.com',
+            ]);
+
+        $response->assertRedirect(route('settings.profile.edit'));
+
+        $this->followRedirects($response)
+            ->assertOk()
+            ->assertViewIs('settings::profile.edit')
+            ->assertSee('Your new email address is awaiting verification.')
+            ->assertSee('Your current email address is old@example.com. To cancel the pending change, enter this address and save.')
+            ->assertSee('Re-send the verification email')
+            ->assertViewHas('email', 'typo@example.com');
+
+        $oldVerificationUrl = URL::temporarySignedRoute(
+            'verification.verify',
+            now()->addMinutes(10),
+            ['id' => $user->id, 'hash' => sha1('typo@example.com')],
+        );
+
+        $response = $this->from(route('settings.profile.edit'))
+            ->patch(route('settings.profile.update'), [
+                'name' => $user->name,
+                'email' => 'correct@example.com',
+            ]);
+
+        $response->assertRedirect(route('settings.profile.edit'));
+
+        $this->followRedirects($response)
+            ->assertOk()
+            ->assertViewHas('email', 'correct@example.com');
+
+        $savedUser = $user->fresh();
+
+        $this->assertSame('old@example.com', $savedUser->email);
+
+        $this->assertSame('correct@example.com', $savedUser->pending_email);
+
+        $this->assertSame($verifiedAt, $savedUser->email_verified_at->toDateTimeString());
+
+        $this->get($oldVerificationUrl)->assertForbidden();
+    }
+
+    #[Test]
+    public function a_user_can_log_in_again_and_cancel_a_pending_email(): void
+    {
+        $user = User::factory()->create(['email' => 'old@example.com']);
+
+        $verifiedAt = $user->email_verified_at->toDateTimeString();
+
+        $this->post(route('login.store'), [
+            'email' => $user->email,
+            'password' => 'password',
+        ])->assertRedirect(route('dashboard'));
+
+        $this->post(route('password.confirm.store'), ['password' => 'password'])->assertValid();
+
+        $response = $this->from(route('settings.profile.edit'))
+            ->patch(route('settings.profile.update'), [
+                'name' => $user->name,
+                'email' => 'typo@example.com',
+            ]);
+
+        $this->followRedirects($response)->assertOk()->assertViewIs('settings::profile.edit');
+
+        $oldVerificationUrl = URL::temporarySignedRoute(
+            'verification.verify',
+            now()->addMinutes(10),
+            ['id' => $user->id, 'hash' => sha1('typo@example.com')],
+        );
+
+        $this->post(route('logout'))->assertRedirect(route('home'));
+
+        $this->post(route('login.store'), [
+            'email' => 'old@example.com',
+            'password' => 'password',
+        ])->assertRedirect(route('dashboard'));
+
+        $this->get(route('settings.profile.edit'))->assertRedirect(route('password.confirm'));
+
+        $this->post(route('password.confirm.store'), ['password' => 'password'])->assertValid();
+
+        $this->get(route('settings.profile.edit'))->assertOk()->assertViewHas('email', 'typo@example.com');
+
+        $response = $this->from(route('settings.profile.edit'))
+            ->patch(route('settings.profile.update'), [
+                'name' => $user->name,
+                'email' => 'old@example.com',
+            ]);
+
+        $response->assertRedirect(route('settings.profile.edit'));
+
+        $this->followRedirects($response)->assertOk()->assertViewHas('email', 'old@example.com');
+
+        $savedUser = $user->fresh();
+
+        $this->assertSame('old@example.com', $savedUser->email);
+
+        $this->assertNull($savedUser->pending_email);
+
+        $this->assertSame($verifiedAt, $savedUser->email_verified_at->toDateTimeString());
+
+        $this->get($oldVerificationUrl)->assertForbidden();
+
+        Notification::assertSentToTimes($savedUser, VerifyEmail::class, 1);
+    }
+
+    #[Test]
+    #[TestWith(['correct@example.com', 'correct@example.com', 'settings::profile.edit', 'dashboard'])]
+    #[TestWith(['old@example.com', null, 'authentication::verify-email', 'settings.profile.edit'])]
+    public function a_user_locked_out_by_an_earlier_email_change_can_correct_or_cancel_it(
+        string $email,
+        ?string $pendingEmail,
+        string $view,
+        string $redirect,
+    ): void {
+        $user = User::factory()->unverified()->create([
+            'email' => 'old@example.com',
+            'pending_email' => 'typo@example.com',
+        ]);
+
+        $this->actingAs($user)->get(route('settings.profile.edit'))->assertRedirect(route('password.confirm'));
+
+        $this->post(route('password.confirm.store'), ['password' => 'password'])->assertValid();
+
+        $this->get(route('settings.profile.edit'))->assertOk()->assertViewHas('email', 'typo@example.com');
+
+        $this->get(route('dashboard'))->assertRedirect(route('verification.notice'));
+
+        $response = $this->from(route('settings.profile.edit'))
+            ->patch(route('settings.profile.update'), [
+                'name' => $user->name,
+                'email' => $email,
+            ]);
+
+        $this->followRedirects($response)->assertOk()->assertViewIs($view);
+
+        $savedUser = $user->fresh();
+
+        $this->assertSame('old@example.com', $savedUser->email);
+
+        $this->assertSame($pendingEmail, $savedUser->pending_email);
+
+        $this->assertNull($savedUser->email_verified_at);
+
+        Notification::assertSentTo($savedUser, VerifyEmail::class);
+
+        $this->assertSame($email, $savedUser->routeNotificationForMail(new VerifyEmail));
+
+        $verificationUrl = URL::temporarySignedRoute(
+            'verification.verify',
+            now()->addMinutes(10),
+            ['id' => $user->id, 'hash' => sha1($email)],
+        );
+
+        $response = $this->get($verificationUrl)->assertRedirect(route($redirect));
+
+        $this->followRedirects($response)->assertOk();
+
+        $savedUser = $user->fresh();
+
+        $this->assertSame($email, $savedUser->email);
+
+        $this->assertNull($savedUser->pending_email);
+
+        $this->assertNotNull($savedUser->email_verified_at);
+    }
+
+    #[Test]
+    public function an_unverified_user_without_a_pending_change_cannot_edit_their_profile(): void
+    {
+        $user = User::factory()->unverified()->create();
+
+        $this->actingAs($user)->get(route('settings.profile.edit'))->assertRedirect(route('verification.notice'));
+
+        $this->patch(route('settings.profile.update'), [
+            'name' => $user->name,
+            'email' => 'new@example.com',
+        ])->assertRedirect(route('verification.notice'));
+
+        $this->assertNull($user->fresh()->pending_email);
     }
 
     #[Test]
@@ -146,7 +343,7 @@ class ProfileControllerTest extends TestCase
     {
         $user = User::factory()->create([
             'email' => 'old@example.com',
-            'email_verified_at' => null,
+            'email_verified_at' => now(),
             'pending_email' => 'new@example.com',
         ]);
 
@@ -271,7 +468,7 @@ class ProfileControllerTest extends TestCase
 
         $this->assertEquals('test@example.com', $user->pending_email);
 
-        $this->assertNull($user->email_verified_at);
+        $this->assertNotNull($user->email_verified_at);
     }
 
     #[Test]

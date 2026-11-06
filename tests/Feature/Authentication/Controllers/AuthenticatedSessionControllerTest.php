@@ -41,6 +41,22 @@ class AuthenticatedSessionControllerTest extends TestCase
     }
 
     #[Test]
+    public function a_pending_email_cannot_be_used_to_log_in(): void
+    {
+        User::factory()->create([
+            'email' => 'old@example.com',
+            'pending_email' => 'new@example.com',
+        ]);
+
+        $this->post(route('login.store'), [
+            'email' => 'new@example.com',
+            'password' => 'password',
+        ])->assertInvalid('email');
+
+        $this->assertGuest();
+    }
+
+    #[Test]
     public function blocked_users_cannot_authenticate_using_the_login_screen(): void
     {
         $user = User::factory()->blocked()->create();

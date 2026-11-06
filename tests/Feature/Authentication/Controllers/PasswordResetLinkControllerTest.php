@@ -42,6 +42,38 @@ class PasswordResetLinkControllerTest extends TestCase
     }
 
     #[Test]
+    public function a_pending_email_cannot_be_used_for_password_recovery(): void
+    {
+        Notification::fake();
+
+        User::factory()->create([
+            'email' => 'old@example.com',
+            'pending_email' => 'new@example.com',
+        ]);
+
+        $this->post(route('password.email'), ['email' => 'new@example.com'])->assertInvalid('email');
+
+        Notification::assertNothingSent();
+    }
+
+    #[Test]
+    public function the_current_email_remains_the_password_recovery_address_while_a_change_is_pending(): void
+    {
+        Notification::fake();
+
+        $user = User::factory()->create([
+            'email' => 'old@example.com',
+            'pending_email' => 'new@example.com',
+        ]);
+
+        $this->post(route('password.email'), ['email' => 'old@example.com'])->assertValid();
+
+        Notification::assertSentTo($user, ResetPassword::class);
+
+        $this->assertSame('old@example.com', $user->routeNotificationForMail(new ResetPassword('token')));
+    }
+
+    #[Test]
     public function reset_password_link_can_be_requested_with_mixed_case_email(): void
     {
         Notification::fake();

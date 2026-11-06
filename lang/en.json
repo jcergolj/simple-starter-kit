@@ -136,5 +136,7 @@
     "Are you sure you want to unblock this user?": "Are you sure you want to unblock this user?",
     "Are you sure you want to delete this user?": "Are you sure you want to delete this user?",
     "Horizon": "Horizon",
-    "Logs": "Logs"
+    "Logs": "Logs",
+    "Your new email address is awaiting verification.": "Your new email address is awaiting verification.",
+    "Your current email address is :email. To cancel the pending change, enter this address and save.": "Your current email address is :email. To cancel the pending change, enter this address and save."
 }

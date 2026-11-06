@@ -9,6 +9,7 @@ use App\Features\Settings\Controllers\ProfileController;
 use App\Features\Settings\Controllers\RecoveryCodesController;
 use App\Features\Settings\Controllers\SettingsController;
 use App\Features\Settings\Controllers\TwoFactorController;
+use App\Http\Middleware\EnsureEmailIsVerifiedOrPending;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
 
@@ -17,7 +18,8 @@ Route::middleware(['auth', 'auth.session', 'verified', 'not_blocked'])->group(fu
 
     Route::prefix('settings')->as('settings.')->group(function () {
         Route::singleton('profile', ProfileController::class)
-            ->middleware('password.confirm')
+            ->withoutMiddleware('verified')
+            ->middleware([EnsureEmailIsVerifiedOrPending::class, 'password.confirm'])
             ->only(['edit', 'update']);
         Route::get('profile/delete', [ProfileController::class, 'delete'])->name('profile.delete');
         Route::post('profile/delete', [ProfileController::class, 'destroy'])->name('profile.destroy');

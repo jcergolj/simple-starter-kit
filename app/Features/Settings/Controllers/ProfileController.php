@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Features\Settings\Controllers;
 
 use App\Features\Settings\Notifications\EmailChangedNotification;
@@ -33,13 +35,16 @@ class ProfileController extends Controller
 
         if ($attributes['email'] !== $user->email) {
             $user->pending_email = $attributes['email'];
-            $user->email_verified_at = null;
             $user->save();
             $user->sendEmailVerificationNotification();
             $user->notify(new EmailChangedNotification($attributes['email']));
         } else {
             $user->pending_email = null;
             $user->save();
+
+            if (! $user->hasVerifiedEmail()) {
+                $user->sendEmailVerificationNotification();
+            }
         }
 
         InAppNotification::success(__('Your profile has been updated.'));

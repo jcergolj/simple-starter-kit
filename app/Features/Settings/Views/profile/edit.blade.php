@@ -54,9 +54,14 @@
 
                     <x-form.error for="email" />
 
-                    @if (auth()->user() instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && ! auth()->user()->hasVerifiedEmail())
+                    @if (auth()->user()->pendingEmail() !== null || ! auth()->user()->hasVerifiedEmail())
                         <div class="flex flex-col justify-center">
-                            <x-text class="mt-4"> {{ __('Your email address is unverified.') }} </x-text>
+                            @if (auth()->user()->pendingEmail() !== null)
+                                <x-text class="mt-4">{{ __('Your new email address is awaiting verification.') }}</x-text>
+                                <x-text class="mt-4">{{ __('Your current email address is :email. To cancel the pending change, enter this address and save.', ['email' => auth()->user()->email]) }}</x-text>
+                            @else
+                                <x-text class="mt-4">{{ __('Your email address is unverified.') }}</x-text>
+                            @endif
 
                             <x-form.button.link form="resend-email-verification" class="cursor-pointer text-sm">
                                 {{ __('Re-send the verification email') }}
