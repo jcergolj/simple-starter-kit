@@ -94,15 +94,14 @@ class ConfirmedTwoFactorControllerTest extends TestCase
     }
 
     #[Test]
-    public function confirmation_form_synchronizes_otp_input_events_before_submission(): void
+    public function confirmation_form_wires_otp_input_events(): void
     {
         $user = User::factory()->withTwoFactorAuthenticationEnabled()->create();
 
         $this->actingAs($user)
             ->withoutMiddleware(RequirePassword::class)
             ->get(route('settings.confirmed-two-factor.edit'))
-            ->assertSee('input->otp#handleInput', false)
-            ->assertSee('submit->otp#syncCode', false);
+            ->assertSee('input->otp#handleInput', false);
     }
 
     #[Test]

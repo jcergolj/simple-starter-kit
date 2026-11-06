@@ -6,7 +6,7 @@
 <div
     data-controller="otp"
     data-otp-digits-value="@js($digits)"
-    data-action="focus-auth-2fa-auth-code@window->otp#focusFirstInputField clear-auth-2fa-auth-code@window->otp#clearAllInputs submit->otp#syncCode"
+    data-action="focus-auth-2fa-auth-code@window->otp#focusFirstInputField clear-auth-2fa-auth-code@window->otp#clearAllInputs"
     class="relative"
 >
     <div class="flex items-center justify-center space-x-2">

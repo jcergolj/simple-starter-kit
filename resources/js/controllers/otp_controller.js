@@ -9,8 +9,15 @@ export default class extends Controller {
     static targets = ["input", "code"];
 
     connect() {
+        this.form = this.codeTarget.form;
+        this.submitHandler = this.syncCode.bind(this);
+        this.form?.addEventListener('submit', this.submitHandler);
         this.focusFirstInputField();
         this.#updateHiddenInputValue();
+    }
+
+    disconnect() {
+        this.form?.removeEventListener('submit', this.submitHandler);
     }
 
     handleFocus({ target }) {
@@ -82,7 +89,7 @@ export default class extends Controller {
         inputElement.value = keyboardEvent.key;
         nextInputElement?.focus();
 
-        this.#scheduleInputUpdate();
+        this.#updateHiddenInputValue();
     }
 
     #processBackspaceInput(inputElement, keyboardEvent) {
@@ -98,13 +105,7 @@ export default class extends Controller {
             previousInputElement.focus();
         }
 
-        this.#scheduleInputUpdate();
-    }
-
-    #scheduleInputUpdate() {
-        setTimeout(() => {
-            this.#updateHiddenInputValue();
-        }, 100);
+        this.#updateHiddenInputValue();
     }
 
     #generateCompleteCode() {
