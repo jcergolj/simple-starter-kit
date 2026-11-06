@@ -53,6 +53,40 @@ class VerifyEmailControllerTest extends TestCase
     }
 
     #[Test]
+    public function pending_email_is_not_promoted_when_another_user_has_taken_it(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'current@example.com',
+            'pending_email' => 'pending@example.com',
+        ]);
+
+        User::factory()->create(['email' => 'pending@example.com']);
+
+        Event::fake([Verified::class]);
+
+        $verificationUrl = URL::temporarySignedRoute('verification.verify', now()->addMinutes(60), [
+            'id' => $user->id,
+            'hash' => sha1('pending@example.com'),
+        ]);
+
+        $response = $this->actingAs($user)->get($verificationUrl);
+
+        $response->assertRedirect(route('settings.profile.edit'));
+
+        $response->assertSessionHasErrors('email');
+
+        $savedUser = $user->fresh();
+
+        $this->assertSame('current@example.com', $savedUser->email);
+
+        $this->assertSame('pending@example.com', $savedUser->pending_email);
+
+        $this->assertTrue($savedUser->hasVerifiedEmail());
+
+        Event::assertNotDispatched(Verified::class);
+    }
+
+    #[Test]
     public function email_is_not_verified_with_invalid_hash(): void
     {
         $user = User::factory()->unverified()->create();

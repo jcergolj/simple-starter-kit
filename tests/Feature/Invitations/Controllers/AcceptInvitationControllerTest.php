@@ -9,7 +9,7 @@ use App\Features\Invitations\Controllers\AcceptInvitationController;
 use App\Features\Invitations\Requests\AcceptInvitationRequest;
 use App\Models\Invitation;
 use App\Models\User;
-use Illuminate\Database\QueryException;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Jcergolj\FormRequestAssertions\TestableFormRequest;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -185,25 +185,54 @@ class AcceptInvitationControllerTest extends TestCase
     }
 
     #[Test]
-    public function store_rolls_back_user_creation_when_acceptance_fails(): void
+    public function store_does_not_accept_an_invitation_for_an_existing_user(): void
     {
         $invitation = Invitation::factory()->create(['email' => 'existing@example.com']);
         User::factory()->create(['email' => $invitation->email]);
 
-        $this->withoutExceptionHandling();
+        $response = $this->post(route('accept.invitations.store', $invitation->token), [
+            'name' => 'Jane Doe',
+            'password' => 'Secret123!',
+            'password_confirmation' => 'Secret123!',
+        ]);
 
-        try {
-            $this->post(route('accept.invitations.store', $invitation->token), [
-                'name' => 'Jane Doe',
-                'password' => 'Secret123!',
-                'password_confirmation' => 'Secret123!',
-            ]);
+        $response->assertSessionHasErrors('email');
 
-            $this->fail('The duplicate email should abort invitation acceptance.');
-        } catch (QueryException) {
-            $this->assertDatabaseCount('users', 1);
-            $this->assertNull($invitation->fresh()->accepted_at);
-        }
+        $this->assertDatabaseCount('users', 1);
+
+        $this->assertNull($invitation->fresh()->accepted_at);
+    }
+
+    #[Test]
+    public function store_rejects_an_address_reserved_after_the_invitation_was_sent(): void
+    {
+        $invitation = Invitation::factory()->create(['email' => 'pending@example.com']);
+
+        $user = User::factory()->create(['email' => 'current@example.com']);
+
+        $this->actingAs($user)->withSession(['auth.password_confirmed_at' => Carbon::now()->getTimestamp()])->patch(route('settings.profile.update'), [
+            'name' => $user->name,
+            'email' => 'pending@example.com',
+        ])->assertSessionHasNoErrors();
+
+        $response = $this->post(route('accept.invitations.store', $invitation->token), [
+            'name' => 'Jane Doe',
+            'password' => 'Secret123!',
+            'password_confirmation' => 'Secret123!',
+            'email' => 'unused@example.com',
+        ]);
+
+        $response->assertSessionHasErrors('email');
+
+        $this->assertDatabaseCount('users', 1);
+
+        $this->assertNull($invitation->fresh()->accepted_at);
+
+        $savedUser = $user->fresh();
+
+        $this->assertSame('current@example.com', $savedUser->email);
+
+        $this->assertSame('pending@example.com', $savedUser->pending_email);
     }
 
     #[Test]

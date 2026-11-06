@@ -12,6 +12,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\TestWith;
 use Tests\TestCase;
 
 class CreateUserCommandTest extends TestCase
@@ -45,6 +46,33 @@ class CreateUserCommandTest extends TestCase
         $this->assertSame(RoleEnum::User, $user->role);
 
         $this->assertNotNull($user->email_verified_at);
+    }
+
+    #[Test]
+    #[TestWith(['pending@example.com'])]
+    #[TestWith(['Pending@Example.COM'])]
+    public function it_rejects_a_pending_email_when_creating_directly(string $email): void
+    {
+        User::factory()->create(['pending_email' => 'pending@example.com']);
+
+        $this->artisan('app:create-user')
+            ->expectsChoice(__('User role?'), __('User'), [__('User'), __('Admin'), __('Superadmin')])
+            ->expectsChoice(
+                __('How should the user be created?'),
+                __('Create directly'),
+                [
+                    __('Send invitation'),
+                    __('Create directly'),
+                ],
+            )
+            ->expectsQuestion(__('Name'), 'John Doe')
+            ->expectsQuestion(__('Email'), $email)
+            ->expectsOutputToContain(__('validation.unique', ['attribute' => 'email']))
+            ->assertFailed();
+
+        $this->assertDatabaseCount('users', 1);
+
+        $this->assertDatabaseMissing('users', ['email' => 'pending@example.com']);
     }
 
     #[Test]
@@ -151,6 +179,34 @@ class CreateUserCommandTest extends TestCase
         Mail::assertSent(InvitationMail::class, function (InvitationMail $mail) {
             return $mail->invitation->email === 'invite@example.com';
         });
+    }
+
+    #[Test]
+    #[TestWith(['pending@example.com'])]
+    #[TestWith(['Pending@Example.COM'])]
+    public function it_rejects_a_pending_email_when_sending_an_invitation(string $email): void
+    {
+        User::factory()->create(['pending_email' => 'pending@example.com']);
+
+        Mail::fake();
+
+        $this->artisan('app:create-user')
+            ->expectsChoice(__('User role?'), __('User'), [__('User'), __('Admin'), __('Superadmin')])
+            ->expectsChoice(
+                __('How should the user be created?'),
+                __('Send invitation'),
+                [
+                    __('Send invitation'),
+                    __('Create directly'),
+                ],
+            )
+            ->expectsQuestion(__('Email'), $email)
+            ->expectsOutputToContain(__('validation.unique', ['attribute' => 'email']))
+            ->assertFailed();
+
+        $this->assertDatabaseEmpty('invitations');
+
+        Mail::assertNothingOutgoing();
     }
 
     #[Test]

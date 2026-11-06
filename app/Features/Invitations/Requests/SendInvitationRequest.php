@@ -34,6 +34,7 @@ class SendInvitationRequest extends AppFormRequest
                         return $query->where('expires_at', '>', now());
                     }),
                 Rule::unique(User::class, 'email'),
+                Rule::unique(User::class, 'pending_email'),
             ],
         ];
     }

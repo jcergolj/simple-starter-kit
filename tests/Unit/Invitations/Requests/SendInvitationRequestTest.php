@@ -74,6 +74,16 @@ class SendInvitationRequestTest extends TestCase
     }
 
     #[Test]
+    public function email_cannot_be_pending_for_another_user(): void
+    {
+        User::factory()->create(['pending_email' => 'pending@example.com']);
+
+        $this->createFormRequest(SendInvitationRequest::class)
+            ->validate(['email' => 'pending@example.com'])
+            ->assertFails(['email' => 'unique']);
+    }
+
+    #[Test]
     public function email_passes_validation_with_valid_unused_address(): void
     {
         $this->createFormRequest(SendInvitationRequest::class)

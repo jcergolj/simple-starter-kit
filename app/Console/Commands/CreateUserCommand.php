@@ -10,6 +10,8 @@ use App\Models\User;
 use App\ValueObjects\EmailAddress;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 use function Laravel\Prompts\password;
 use function Laravel\Prompts\select;
@@ -60,14 +62,7 @@ class CreateUserCommand extends Command
 
     private function sendInvitation(RoleEnum $role): int
     {
-        $email = text(
-            label: __('Email'),
-            required: true,
-            validate: ['email' => 'required|email|unique:users,email'],
-            transform: function (string $email): string {
-                return EmailAddress::from($email)->toString();
-            },
-        );
+        $email = $this->askForEmail();
 
         $languages = array_map(
             function (string $path) {
@@ -96,14 +91,7 @@ class CreateUserCommand extends Command
             validate: ['name' => 'required|max:255'],
         );
 
-        $email = text(
-            label: __('Email'),
-            required: true,
-            validate: ['email' => 'required|email|unique:users,email'],
-            transform: function (string $email): string {
-                return EmailAddress::from($email)->toString();
-            },
-        );
+        $email = $this->askForEmail();
 
         $password = password(
             label: __('Password'),
@@ -122,5 +110,26 @@ class CreateUserCommand extends Command
         $this->components->info(__('User created successfully.'));
 
         return self::SUCCESS;
+    }
+
+    private function askForEmail(): string
+    {
+        return text(
+            label: __('Email'),
+            required: true,
+            validate: function (string $email): ?string {
+                return Validator::make(['email' => EmailAddress::from($email)->toString()], [
+                    'email' => [
+                        'required',
+                        'email',
+                        Rule::unique(User::class, 'email'),
+                        Rule::unique(User::class, 'pending_email'),
+                    ],
+                ])->errors()->first() ?: null;
+            },
+            transform: function (string $email): string {
+                return EmailAddress::from($email)->toString();
+            },
+        );
     }
 }

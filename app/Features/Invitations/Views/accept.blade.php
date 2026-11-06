@@ -20,6 +20,7 @@
                     readonly
                     class="mt-2"
                 />
+                <x-form.error for="email" />
             </div>
 
             <div>

@@ -77,6 +77,16 @@ class UpdateUserRequestTest extends TestCase
     }
 
     #[Test]
+    public function email_cannot_be_pending_for_another_user(): void
+    {
+        User::factory()->create(['pending_email' => 'pending@example.com']);
+
+        $this->createFormRequest(UpdateUserRequest::class)
+            ->validate(['email' => 'pending@example.com'])
+            ->assertFails(['email' => 'unique']);
+    }
+
+    #[Test]
     public function valid_data_passes(): void
     {
         $this->createFormRequest(UpdateUserRequest::class)

@@ -8,6 +8,7 @@ use App\Enums\RoleEnum;
 use App\Features\UserManagement\Controllers\UserController;
 use App\Features\UserManagement\Requests\UpdateUserRequest;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
@@ -320,6 +321,59 @@ class UserControllerTest extends TestCase
         $this->assertTrue($updatedUser->hasVerifiedEmail());
 
         Notification::assertNotSentTo($user, VerifyEmail::class);
+    }
+
+    #[Test]
+    public function admin_cannot_assign_an_email_requested_in_another_profile(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $owner = User::factory()->create(['email' => 'owner@example.com']);
+
+        $user = User::factory()->create(['email' => 'current@example.com']);
+
+        $this->actingAs($owner)->withSession(['auth.password_confirmed_at' => Carbon::now()->getTimestamp()])->patch(route('settings.profile.update'), [
+            'name' => $owner->name,
+            'email' => 'pending@example.com',
+        ])->assertSessionHasNoErrors();
+
+        Notification::fake();
+
+        $response = $this->actingAs($admin)->put(route('users.update', $user), [
+            'name' => $user->name,
+            'email' => '  Pending@Example.COM ',
+        ]);
+
+        $response->assertSessionHasErrors('email');
+
+        $savedUser = $user->fresh();
+
+        $this->assertSame('current@example.com', $savedUser->email);
+
+        $savedOwner = $owner->fresh();
+
+        $this->assertSame('pending@example.com', $savedOwner->pending_email);
+
+        Notification::assertNothingSent();
+    }
+
+    #[Test]
+    public function admin_can_assign_the_users_own_pending_email(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $user = User::factory()->create(['pending_email' => 'pending@example.com']);
+
+        $this->actingAs($admin)->put(route('users.update', $user), [
+            'name' => $user->name,
+            'email' => 'pending@example.com',
+        ])->assertRedirect(route('users.index'));
+
+        $savedUser = $user->fresh();
+
+        $this->assertSame('pending@example.com', $savedUser->email);
+
+        $this->assertNull($savedUser->pending_email);
     }
 
     #[Test]

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Features\Invitations\Controllers;
 
 use App\DataTransferObjects\UserSettings;
@@ -9,6 +11,8 @@ use App\Models\Invitation;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class AcceptInvitationController extends Controller
@@ -34,6 +38,13 @@ class AcceptInvitationController extends Controller
             if (! $invitation->isPending()) {
                 return to_route('login')->with('status', __('This invitation is no longer valid.'));
             }
+
+            Validator::make(['email' => $invitation->email], [
+                'email' => [
+                    Rule::unique(User::class, 'email'),
+                    Rule::unique(User::class, 'pending_email'),
+                ],
+            ])->validate();
 
             User::create([
                 'name' => $request->validated('name'),
