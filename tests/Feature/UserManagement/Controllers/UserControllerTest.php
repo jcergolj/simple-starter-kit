@@ -11,6 +11,7 @@ use App\Models\User;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\URL;
 use Jcergolj\FormRequestAssertions\TestableFormRequest;
 use Jcergolj\InAppNotifications\Facades\InAppNotification;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -203,6 +204,85 @@ class UserControllerTest extends TestCase
     }
 
     #[Test]
+    public function admin_email_change_clears_pending_email_and_notifies_the_new_address(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $user = User::factory()->create([
+            'email' => 'old@example.com',
+            'pending_email' => 'pending@example.com',
+        ]);
+
+        $this->actingAs($admin)->put(route('users.update', $user), [
+            'name' => $user->name,
+            'email' => 'new@example.com',
+        ])->assertRedirect(route('users.index'));
+
+        $updatedUser = $user->fresh();
+
+        $this->assertSame('new@example.com', $updatedUser->email);
+
+        $this->assertNull($updatedUser->pending_email);
+
+        $this->assertNull($updatedUser->email_verified_at);
+
+        Notification::assertSentTo($updatedUser, function (VerifyEmail $notification, array $channels, User $notifiable): bool {
+            $this->assertSame('new@example.com', $notifiable->routeNotificationForMail($notification));
+
+            $this->assertSame('new@example.com', $notifiable->getEmailForVerification());
+
+            return true;
+        });
+    }
+
+    #[Test]
+    public function old_pending_email_link_cannot_overwrite_an_admin_email_change(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $user = User::factory()->create([
+            'email' => 'old@example.com',
+            'pending_email' => 'pending@example.com',
+            'email_verified_at' => null,
+        ]);
+
+        $oldLink = URL::temporarySignedRoute('verification.verify', now()->addMinutes(60), [
+            'id' => $user->id,
+            'hash' => sha1('pending@example.com'),
+        ]);
+
+        $this->actingAs($admin)->put(route('users.update', $user), [
+            'name' => $user->name,
+            'email' => 'new@example.com',
+        ])->assertRedirect(route('users.index'));
+
+        $this->actingAs($user->fresh())->get($oldLink)->assertForbidden();
+
+        $updatedUser = $user->fresh();
+
+        $this->assertSame('new@example.com', $updatedUser->email);
+
+        $this->assertNull($updatedUser->pending_email);
+
+        $this->assertNull($updatedUser->email_verified_at);
+
+        $newLink = URL::temporarySignedRoute('verification.verify', now()->addMinutes(60), [
+            'id' => $user->id,
+            'hash' => sha1('new@example.com'),
+        ]);
+
+        $this->get($newLink)->assertRedirect(route('dashboard', ['verified' => 1], absolute: false));
+
+        $verifiedUser = $user->fresh();
+
+        $this->assertSame('new@example.com', $verifiedUser->email);
+
+        $this->assertNull($verifiedUser->pending_email);
+
+        $this->assertTrue($verifiedUser->hasVerifiedEmail());
+    }
+
+    #[Test]
     public function admin_email_change_normalizes_the_email(): void
     {
         $user = User::factory()->create(['email' => 'old@example.com']);
@@ -222,7 +302,7 @@ class UserControllerTest extends TestCase
     {
         $admin = User::factory()->admin()->create();
 
-        $user = User::factory()->create();
+        $user = User::factory()->create(['pending_email' => 'pending@example.com']);
 
         $response = $this->actingAs($admin)->put(route('users.update', $user), [
             'name' => 'Updated Name',
@@ -232,6 +312,12 @@ class UserControllerTest extends TestCase
         $response->assertRedirect(route('users.index'));
 
         InAppNotification::assertSuccess(__('User updated.'));
+
+        $updatedUser = $user->fresh();
+
+        $this->assertSame('pending@example.com', $updatedUser->pending_email);
+
+        $this->assertTrue($updatedUser->hasVerifiedEmail());
 
         Notification::assertNotSentTo($user, VerifyEmail::class);
     }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Features\UserManagement\Controllers;
 
 use App\Enums\RoleEnum;
@@ -36,6 +38,7 @@ class UserController extends Controller
 
         if ($emailChanged) {
             $attributes['email_verified_at'] = null;
+            $attributes['pending_email'] = null;
         }
 
         $user->update($attributes);
