@@ -1,6 +1,6 @@
 # Business Automation Starter Kit
 
-A Laravel 13 starter kit for building business automation tools. It ships with authentication, queues, and real-time page updates via Hotwire. Production provisioning and deployment automation must be supplied separately.
+A Laravel 13 starter kit for building business automation tools. It ships with authentication, queues, and real-time page updates via Hotwire. Production provisioning and deployment scaffolding come from [Metator for Laravel](https://github.com/jcergolj/metator-for-laravel).
 
 ## What’s included
 
@@ -195,19 +195,26 @@ php artisan tailwindcss:watch --no-tty
 
 ## Deployment
 
-### What this repository provides
+### Metator is the deployment source of truth
 
-This repository provides the Laravel application, its Composer lockfile, environment template, migrations, and asset sources. Follow **Local development** above to install and check the application from a clean checkout.
+[Metator for Laravel](https://github.com/jcergolj/metator-for-laravel#quick-start) is the primary source for deployment tooling, provisioning definitions, and their documentation. Follow its current requirements and installation guide rather than maintaining a separate bootstrap workflow in this starter kit.
 
-It does **not** include server provisioning definitions (`scripts/server-bootstrap.sh`, `scripts/steps/`, or `scripts/lib/`), a Metator configuration, or a Deployer recipe (`deploy.php`). Neither Metator nor Deployer is a Composer dependency here; `composer install` does not provide `vendor/bin/dep`. There is no bundled production deployment command or deployment dry run.
+This repository provides the Laravel application, its Composer lockfile, environment template, migrations, and asset sources. From a clean checkout, complete **Local development** above before adding deployment scaffolding to your application:
 
-### Supply production infrastructure separately
+```bash
+composer require --dev jcergolj/metator-for-laravel
+php artisan metator:install
+```
 
-Choose a managed Laravel hosting service or maintain your own infrastructure and release automation. Provisioning definitions, server configuration, credentials, and deployment tooling must come from that service or your own infrastructure repository—not from this starter kit.
+Metator supplies Deployer as a dependency. Its installer generates the site configuration, editable `deploy.php`, and selected provisioning pipeline. These are generated for your application; they are not bundled with this starter kit, and `composer install` alone does not install Metator or provide `vendor/bin/dep`.
 
-[Metator for Laravel](https://github.com/jcergolj/metator-for-laravel) is an optional external provisioning tool, not part of this application's setup. If you choose it, follow its documentation and supply the bootstrap definitions and site configuration it requires in your infrastructure project. Installing Metator alone does not restore the missing definitions in this repository.
+### Provision and deploy
 
-If you choose Deployer, install it in your deployment tooling project and write a recipe for your infrastructure before using its deployment or dry-run commands. No release branch, target host, service names, or worker restart hooks are defined here.
+Follow Metator's [server workflow](https://github.com/jcergolj/metator-for-laravel#server-workflow) to prepare the server, provision the site, and register its deploy key. Provisioning configures infrastructure; it does not deploy application code. Review the generated recipe, then use the separate Deployer release command documented by Metator.
+
+Configure application-specific release tasks in the generated `deploy.php`. In particular, use Metator's [Tailwind deployment guidance](https://github.com/jcergolj/metator-for-laravel#custom-deployment-scripts) for this application's standalone Tailwind build; no npm build is needed. Do not assume that generating the recipe adds every application-specific task.
+
+Validate the generated configuration and recipe in staging, including a deployment dry run if the installed tooling supports one. This starter kit has no deployment target or bundled recipe against which to run a deployment dry run.
 
 ### Production readiness checklist
 
@@ -220,7 +227,7 @@ Your hosting configuration and release process are responsible for:
 - Configuring the scheduler and persistent workers, restarting workers after releases, and checking application health.
 - Defining rollback/recovery procedures and validating the chosen automation in staging, including a dry run if that tooling supports one.
 
-These are operator responsibilities, not steps performed by a bundled recipe. The local development `Procfile` is not a production service configuration.
+Use Metator's documentation and your generated configuration and recipe to determine which steps are automated. Verify the remaining operator responsibilities before going live. The local development `Procfile` is not a production service configuration.
 
 ### GitHub Actions
 
