@@ -25,8 +25,24 @@ Route::middleware(['auth', 'auth.session', 'verified', 'not_blocked'])->group(fu
         Route::singleton('language', LanguageController::class)->only(['edit', 'update']);
 
         if (Features::canManageTwoFactorAuthentication()) {
-            Route::middleware(when(Features::optionEnabled(Features::twoFactorAuthentication(), 'confirmPassword'), ['password.confirm'], []))->group(function () {
-                Route::singleton('two-factor', TwoFactorController::class)->destroyable()->only(['edit', 'update', 'destroy']);
+            Route::middleware(when(
+                Features::optionEnabled(
+                    Features::twoFactorAuthentication(),
+                    'confirmPassword',
+                ),
+                ['password.confirm'],
+                [],
+            ))->group(function () {
+                Route::singleton(
+                    'two-factor',
+                    TwoFactorController::class,
+                )
+                    ->destroyable()
+                    ->only([
+                        'edit',
+                        'update',
+                        'destroy',
+                    ]);
                 Route::singleton('confirmed-two-factor', ConfirmedTwoFactorController::class)->only(['edit', 'update']);
                 Route::singleton('recovery-codes', RecoveryCodesController::class)->only(['edit', 'update']);
             });

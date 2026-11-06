@@ -49,6 +49,7 @@ class UserControllerTest extends TestCase
     public function edit_has_auth_verified_and_admin_middleware(): void
     {
         $admin = User::factory()->admin()->create();
+
         $user = User::factory()->create();
 
         $response = $this->actingAs($admin)->get(route('users.edit', $user));
@@ -64,6 +65,7 @@ class UserControllerTest extends TestCase
     public function update_has_auth_verified_and_admin_middleware(): void
     {
         $admin = User::factory()->admin()->create();
+
         $user = User::factory()->create();
 
         $response = $this->actingAs($admin)->put(route('users.update', $user), [
@@ -79,20 +81,10 @@ class UserControllerTest extends TestCase
     }
 
     #[Test]
-    public function update_has_form_request(): void
-    {
-        $admin = User::factory()->admin()->create();
-        $user = User::factory()->create();
-
-        $this->actingAs($admin)->put(route('users.update', $user));
-
-        $this->assertContainsFormRequest(UpdateUserRequest::class);
-    }
-
-    #[Test]
     public function destroy_has_auth_verified_and_admin_middleware(): void
     {
         $admin = User::factory()->admin()->create();
+
         $user = User::factory()->create();
 
         $response = $this->actingAs($admin)->delete(route('users.destroy', $user));
@@ -105,9 +97,22 @@ class UserControllerTest extends TestCase
     }
 
     #[Test]
+    public function update_has_form_request(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $user = User::factory()->create();
+
+        $this->actingAs($admin)->put(route('users.update', $user));
+
+        $this->assertContainsFormRequest(UpdateUserRequest::class);
+    }
+
+    #[Test]
     public function admin_can_list_users(): void
     {
         $admin = User::factory()->admin()->create();
+
         $user = User::factory()->create();
 
         $response = $this->actingAs($admin)->get(route('users.index'));
@@ -121,6 +126,7 @@ class UserControllerTest extends TestCase
     public function admin_is_excluded_from_user_list(): void
     {
         $admin = User::factory()->admin()->create();
+
         $otherUser = User::factory()->create();
 
         $response = $this->actingAs($admin)->get(route('users.index'));
@@ -138,6 +144,7 @@ class UserControllerTest extends TestCase
     public function admin_can_view_edit_form(): void
     {
         $admin = User::factory()->admin()->create();
+
         $user = User::factory()->create();
 
         $response = $this->actingAs($admin)->get(route('users.edit', $user));
@@ -155,6 +162,7 @@ class UserControllerTest extends TestCase
     public function admin_can_update_user(): void
     {
         $admin = User::factory()->admin()->create();
+
         $user = User::factory()->create();
 
         $response = $this->actingAs($admin)->put(route('users.update', $user), [
@@ -176,6 +184,7 @@ class UserControllerTest extends TestCase
     public function admin_email_change_resets_verification_and_sends_verification_notification(): void
     {
         $admin = User::factory()->admin()->create();
+
         $user = User::factory()->create([
             'email' => 'old@example.com',
             'email_verified_at' => now(),
@@ -212,6 +221,7 @@ class UserControllerTest extends TestCase
     public function admin_can_update_user_with_same_email(): void
     {
         $admin = User::factory()->admin()->create();
+
         $user = User::factory()->create();
 
         $response = $this->actingAs($admin)->put(route('users.update', $user), [
@@ -230,6 +240,7 @@ class UserControllerTest extends TestCase
     public function admin_can_delete_user(): void
     {
         $admin = User::factory()->admin()->create();
+
         $user = User::factory()->create();
 
         $response = $this->actingAs($admin)->delete(route('users.destroy', $user));

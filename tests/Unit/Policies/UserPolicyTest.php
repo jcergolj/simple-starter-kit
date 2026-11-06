@@ -17,7 +17,9 @@ class UserPolicyTest extends TestCase
     public function admin_can_manage_regular_users(): void
     {
         $admin = User::factory()->admin()->make();
+
         $user = User::factory()->make();
+
         $policy = new UserPolicy;
 
         $this->assertTrue($policy->update($admin, $user));
@@ -31,7 +33,9 @@ class UserPolicyTest extends TestCase
     public function admin_cannot_manage_admins_or_themselves(): void
     {
         $admin = User::factory()->admin()->make();
+
         $otherAdmin = User::factory()->admin()->make();
+
         $policy = new UserPolicy;
 
         $this->assertFalse($policy->update($admin, $admin));

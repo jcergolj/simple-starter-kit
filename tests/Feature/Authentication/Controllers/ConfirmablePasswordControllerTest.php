@@ -83,6 +83,7 @@ class ConfirmablePasswordControllerTest extends TestCase
         $blockedUser = User::factory()->create([
             'password' => Hash::make('blocked-password'),
         ]);
+
         $otherUser = User::factory()->create([
             'password' => Hash::make('other-password'),
         ]);

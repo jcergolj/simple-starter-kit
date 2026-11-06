@@ -139,6 +139,7 @@ class InvitationControllerTest extends TestCase
     {
         Mail::fake();
         $admin = User::factory()->admin()->create();
+
         $invitation = Invitation::factory()->expired()->create([
             'email' => 'expired@example.com',
         ]);
@@ -166,6 +167,7 @@ class InvitationControllerTest extends TestCase
     {
         Mail::fake();
         $admin = User::factory()->admin()->create();
+
         $invitation = Invitation::factory()->accepted()->create([
             'email' => 'accepted@example.com',
         ]);
@@ -192,6 +194,7 @@ class InvitationControllerTest extends TestCase
     public function admin_can_revoke_pending_invitation(): void
     {
         $admin = User::factory()->admin()->create();
+
         $invitation = Invitation::factory()->create();
 
         $response = $this->actingAs($admin)->delete(route('invitations.destroy', $invitation));
@@ -205,6 +208,7 @@ class InvitationControllerTest extends TestCase
     public function revoked_invitation_is_deleted_from_db(): void
     {
         $admin = User::factory()->admin()->create();
+
         $invitation = Invitation::factory()->create();
 
         $this->actingAs($admin)->delete(route('invitations.destroy', $invitation));

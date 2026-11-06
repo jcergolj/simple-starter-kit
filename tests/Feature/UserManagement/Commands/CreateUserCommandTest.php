@@ -52,7 +52,14 @@ class CreateUserCommandTest extends TestCase
     {
         $this->artisan('app:create-user')
             ->expectsChoice(__('User role?'), __('User'), [__('User'), __('Admin'), __('Superadmin')])
-            ->expectsChoice(__('How should the user be created?'), __('Create directly'), [__('Send invitation'), __('Create directly')])
+            ->expectsChoice(
+                __('How should the user be created?'),
+                __('Create directly'),
+                [
+                    __('Send invitation'),
+                    __('Create directly'),
+                ],
+            )
             ->expectsQuestion(__('Name'), 'John Doe')
             ->expectsQuestion(__('Email'), 'John@Example.COM')
             ->expectsQuestion(__('Password'), 'password')
@@ -153,7 +160,14 @@ class CreateUserCommandTest extends TestCase
 
         $this->artisan('app:create-user')
             ->expectsChoice(__('User role?'), __('User'), [__('User'), __('Admin'), __('Superadmin')])
-            ->expectsChoice(__('How should the user be created?'), __('Send invitation'), [__('Send invitation'), __('Create directly')])
+            ->expectsChoice(
+                __('How should the user be created?'),
+                __('Send invitation'),
+                [
+                    __('Send invitation'),
+                    __('Create directly'),
+                ],
+            )
             ->expectsQuestion(__('Email'), 'Invite@Example.COM')
             ->expectsChoice(__('Language'), 'en', ['en', 'sl'])
             ->assertSuccessful();

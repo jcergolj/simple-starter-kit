@@ -44,6 +44,7 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         if ($this->pendingEmail() !== null) {
             $this->email = $this->pendingEmail();
+
             $this->pending_email = null;
         }
 

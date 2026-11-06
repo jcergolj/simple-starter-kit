@@ -40,7 +40,14 @@ class AcceptInvitationControllerTest extends TestCase
 
         $response->assertOk()
             ->assertViewIs('invitations::accept')
-            ->assertViewHasForm('id="accept-invitation-form"', 'POST', route('accept.invitations.store', $invitation->token))
+            ->assertViewHasForm(
+                'id="accept-invitation-form"',
+                'POST',
+                route(
+                    'accept.invitations.store',
+                    $invitation->token,
+                ),
+            )
             ->assertFormHasCSRF()
             ->assertFormHasEmailInput('email')
             ->assertFormHasTextInput('name')
