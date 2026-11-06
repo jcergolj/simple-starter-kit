@@ -210,10 +210,11 @@ class AcceptInvitationControllerTest extends TestCase
 
         $user = User::factory()->create(['email' => 'current@example.com']);
 
-        $this->actingAs($user)->withSession(['auth.password_confirmed_at' => Carbon::now()->getTimestamp()])->patch(route('settings.profile.update'), [
-            'name' => $user->name,
-            'email' => 'pending@example.com',
-        ])->assertSessionHasNoErrors();
+        $this->actingAs($user)->withSession(['auth.password_confirmed_at' => Carbon::now()
+            ->getTimestamp()])->patch(route('settings.profile.update'), [
+                'name' => $user->name,
+                'email' => 'pending@example.com',
+            ])->assertSessionHasNoErrors();
 
         $response = $this->post(route('accept.invitations.store', $invitation->token), [
             'name' => 'Jane Doe',

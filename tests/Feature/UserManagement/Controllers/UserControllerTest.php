@@ -332,10 +332,11 @@ class UserControllerTest extends TestCase
 
         $user = User::factory()->create(['email' => 'current@example.com']);
 
-        $this->actingAs($owner)->withSession(['auth.password_confirmed_at' => Carbon::now()->getTimestamp()])->patch(route('settings.profile.update'), [
-            'name' => $owner->name,
-            'email' => 'pending@example.com',
-        ])->assertSessionHasNoErrors();
+        $this->actingAs($owner)->withSession(['auth.password_confirmed_at' => Carbon::now()
+            ->getTimestamp()])->patch(route('settings.profile.update'), [
+                'name' => $owner->name,
+                'email' => 'pending@example.com',
+            ])->assertSessionHasNoErrors();
 
         Notification::fake();
 
