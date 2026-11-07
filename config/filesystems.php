@@ -63,7 +63,7 @@ return [
         ],
 
         'sftp-backup' => [
-            'driver' => 'sftp',
+            'driver' => 'verified-sftp',
             'host' => env('SFTP_HOST'),
             'username' => env('SFTP_USERNAME'),
             'password' => env('SFTP_PASSWORD'),
@@ -74,6 +74,7 @@ return [
             'directory_visibility' => 'private',
             'port' => (int) env('SFTP_PORT', 22),
             'root' => getenv('SFTP_ROOT') ?: env('SFTP_ROOT', '/home/backup'),
+            'throw' => true,
         ],
 
     ],

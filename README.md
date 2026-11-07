@@ -268,6 +268,24 @@ Your hosting configuration and release process are responsible for:
 
 Use Metator's documentation and your generated configuration and recipe to determine which steps are automated. Verify the remaining operator responsibilities before going live. The local development `Procfile` is not a production service configuration.
 
+### SFTP backup host identity
+
+The `sftp-backup` disk requires `SFTP_HOST_FINGERPRINT` before it can connect, in every environment. Missing fingerprints raise a configuration error; mismatched host keys fail the connection. Other application commands remain available when SFTP is not configured.
+
+Obtain the fingerprint through the backup server's trusted console or an independently authenticated operator. For example, run this **on the backup server** for its configured Ed25519 host key:
+
+```bash
+ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub -E sha256
+```
+
+Set `SFTP_HOST_FINGERPRINT` to the complete `SHA256:...` value from that output. Do not trust an unverified `ssh-keyscan` result or simply copy the key offered by a failed connection. Verify planned host-key changes through the same independent channel before replacing the fingerprint. Rebuild Laravel's configuration cache after changing production configuration.
+
+Configure `BACKUP_NOTIFICATION_EMAIL` and check backup failure/monitor notifications and scheduler output. Verify the destination in staging with `php artisan backup:monitor` before enabling production backups.
+
+If backups previously used an unverified destination, investigate possible interception. Rotate potentially exposed SFTP passwords, and revoke/replace SSH keys if their private material may have been exposed. Treat transferred backup archives as potentially copied; assess their contents, archive-password protection, and whether credentials or other secrets inside them need rotation. Preserve and verify trusted recovery copies before changing retention.
+
+The isolated host-identity regression uses a temporary loopback-only OpenSSH server and transfers no backups. It requires `sshd` and `ssh-keygen`; the connection tests explicitly skip when those executables are unavailable. The missing-fingerprint tests run without OpenSSH.
+
 ### GitHub Actions
 
 If you want GitHub Actions to commit changes, update the repository permissions:

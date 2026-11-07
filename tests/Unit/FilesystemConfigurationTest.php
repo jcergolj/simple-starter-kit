@@ -6,11 +6,33 @@ namespace Tests\Unit;
 
 use Illuminate\Filesystem\AwsS3V3Adapter;
 use Illuminate\Support\Facades\Storage;
+use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\TestWith;
 use Tests\TestCase;
 
 class FilesystemConfigurationTest extends TestCase
 {
+    #[Test]
+    #[TestWith([null])]
+    #[TestWith([''])]
+    #[TestWith(['   '])]
+    #[TestWith(['0'])]
+    public function sftp_backup_requires_a_host_fingerprint_before_connecting(?string $fingerprint): void
+    {
+        config([
+            'filesystems.disks.sftp-backup.host' => 'unused.example.invalid',
+            'filesystems.disks.sftp-backup.username' => 'backup',
+            'filesystems.disks.sftp-backup.hostFingerprint' => $fingerprint,
+        ]);
+
+        $this->expectException(InvalidArgumentException::class);
+
+        $this->expectExceptionMessage('SFTP_HOST_FINGERPRINT must contain an independently verified SSH host fingerprint.');
+
+        Storage::disk('sftp-backup');
+    }
+
     #[Test]
     public function s3_disk_resolves_without_contacting_aws(): void
     {
