@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Features\Invitations\Controllers;
 
+use App\Enums\RoleEnum;
 use App\Features\Invitations\Mail\InvitationMail;
 use App\Features\Invitations\Requests\SendInvitationRequest;
 use App\Http\Controllers\Controller;
@@ -34,7 +37,13 @@ class InvitationController extends Controller
                     ->lockForUpdate()
                     ->first();
 
-                return $existingInvitation?->renew() ?? Invitation::createFor($email);
+                if ($existingInvitation !== null) {
+                    $existingInvitation->role = RoleEnum::User;
+
+                    return $existingInvitation->renew();
+                }
+
+                return Invitation::createFor($email);
             });
         } catch (UniqueConstraintViolationException) {
             throw ValidationException::withMessages([

@@ -4,17 +4,20 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Invitations\Controllers;
 
+use App\Enums\RoleEnum;
 use App\Features\Invitations\Controllers\InvitationController;
 use App\Features\Invitations\Mail\InvitationMail;
 use App\Features\Invitations\Requests\SendInvitationRequest;
 use App\Models\Invitation;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Jcergolj\FormRequestAssertions\TestableFormRequest;
 use Jcergolj\InAppNotifications\Facades\InAppNotification;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\TestWith;
 use Tests\TestCase;
 
 #[CoversClass(InvitationController::class)]
@@ -188,6 +191,45 @@ class InvitationControllerTest extends TestCase
         $this->assertTrue($invitation->isPending());
 
         $this->get(route('invitations.accept', $oldToken))->assertNotFound();
+    }
+
+    #[Test]
+    #[TestWith(['expired', RoleEnum::Superadmin])]
+    #[TestWith(['accepted', RoleEnum::Superadmin])]
+    #[TestWith(['expired', RoleEnum::Admin])]
+    #[TestWith(['accepted', RoleEnum::Admin])]
+    public function admin_renewed_invitation_creates_only_a_regular_user(string $state, RoleEnum $role): void
+    {
+        Mail::fake();
+
+        $admin = User::factory()->admin()->create();
+
+        $invitation = Invitation::factory()->{$state}()->create(['role' => $role]);
+
+        $this->actingAs($admin)->post(route('invitations.store'), [
+            'email' => $invitation->email,
+            'role' => RoleEnum::Superadmin->value,
+        ])->assertRedirect(route('invitations.create'));
+
+        $invitation->refresh();
+
+        Mail::assertSent(InvitationMail::class, function (InvitationMail $mail) use ($invitation): bool {
+            return $mail->hasTo($invitation->email);
+        });
+
+        Auth::logout();
+
+        $this->post(route('accept.invitations.store', $invitation->token), [
+            'name' => 'Invited User',
+            'password' => 'Secret123!',
+            'password_confirmation' => 'Secret123!',
+        ])->assertRedirect(route('login'));
+
+        $user = User::where('email', $invitation->email)->firstOrFail();
+
+        $this->assertSame(RoleEnum::User, $user->role);
+
+        $this->assertSame(RoleEnum::User, $invitation->role);
     }
 
     #[Test]
