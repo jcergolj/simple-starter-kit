@@ -6,7 +6,9 @@ namespace App\Providers;
 
 use App\Features\Authentication\Actions\Fortify\ResetUserPassword;
 use App\Features\Authentication\Controllers\EmailVerificationNotificationController;
+use App\Features\Authentication\Controllers\PasswordResetLinkController;
 use App\Features\Authentication\Controllers\VerifyEmailController;
+use App\Features\Authentication\Responses\PasswordResetLinkResponse;
 use App\Models\User;
 use App\Rules\CurrentPassword;
 use App\ValueObjects\EmailAddress;
@@ -18,14 +20,21 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Laravel\Fortify\Actions\RedirectIfTwoFactorAuthenticatable;
+use Laravel\Fortify\Contracts\FailedPasswordResetLinkRequestResponse;
+use Laravel\Fortify\Contracts\SuccessfulPasswordResetLinkRequestResponse;
 use Laravel\Fortify\Fortify;
 use Laravel\Fortify\Http\Controllers\EmailVerificationNotificationController as FortifyEmailVerificationNotificationController;
+use Laravel\Fortify\Http\Controllers\PasswordResetLinkController as FortifyPasswordResetLinkController;
 use Laravel\Fortify\Http\Controllers\VerifyEmailController as FortifyVerifyEmailController;
 
 class FortifyServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        $this->app->bind(SuccessfulPasswordResetLinkRequestResponse::class, PasswordResetLinkResponse::class);
+        $this->app->bind(FailedPasswordResetLinkRequestResponse::class, PasswordResetLinkResponse::class);
+        $this->app->bind(FortifyPasswordResetLinkController::class, PasswordResetLinkController::class);
+
         $this->app->bind(FortifyVerifyEmailController::class, VerifyEmailController::class);
         $this->app
             ->bind(
@@ -72,6 +81,10 @@ class FortifyServiceProvider extends ServiceProvider
 
     private function configureRateLimiting(): void
     {
+        RateLimiter::for('password-recovery', function (Request $request): Limit {
+            return Limit::perMinute(5)->by($request->ip());
+        });
+
         RateLimiter::for('login', function (Request $request) {
             $throttleKey = Str::transliterate(Str::lower($request->input(Fortify::username())).'|'.$request->ip());
 

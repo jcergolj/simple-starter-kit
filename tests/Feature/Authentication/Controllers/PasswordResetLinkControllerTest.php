@@ -19,6 +19,85 @@ class PasswordResetLinkControllerTest extends TestCase
 {
     use RefreshDatabase;
 
+    #[Test]
+    public function json_recovery_responses_do_not_reveal_known_unknown_or_recently_requested_accounts(): void
+    {
+        Notification::fake();
+
+        $user = User::factory()->create();
+
+        foreach ([$user->email, 'missing@example.com', $user->email] as $email) {
+            $this->postJson(route('password.email'), ['email' => $email])
+                ->assertOk()
+                ->assertExactJson([
+                    'message' => __('If an account exists for this email address, you will receive a password reset link.'),
+                ]);
+        }
+
+        Notification::assertSentTo($user, ResetPassword::class);
+
+        Notification::assertCount(1);
+    }
+
+    #[Test]
+    public function html_recovery_responses_do_not_reveal_known_unknown_or_recently_requested_accounts(): void
+    {
+        Notification::fake();
+
+        $user = User::factory()->create();
+
+        foreach ([$user->email, 'missing@example.com', $user->email] as $email) {
+            $this->from(route('password.request'))->post(route('password.email'), ['email' => $email])
+                ->assertRedirect(route('password.request'))
+                ->assertSessionHasNoErrors()
+                ->assertSessionHas(
+                    'status',
+                    __('If an account exists for this email address, you will receive a password reset link.'),
+                );
+        }
+
+        Notification::assertSentTo($user, ResetPassword::class);
+
+        Notification::assertCount(1);
+    }
+
+    #[Test]
+    public function recovery_requests_share_an_ip_limit_across_email_addresses(): void
+    {
+        Notification::fake();
+
+        $this->freezeTime();
+
+        $user = User::factory()->create();
+
+        for ($attempt = 1; $attempt <= 5; $attempt++) {
+            $this->postJson(route('password.email'), ['email' => 'missing'.$attempt.'@example.com'])
+                ->assertOk();
+        }
+
+        $this->postJson(route('password.email'), ['email' => $user->email])
+            ->assertTooManyRequests()
+            ->assertHeader('Retry-After');
+
+        Notification::assertNothingSent();
+
+        $this->withServerVariables(['REMOTE_ADDR' => '203.0.113.20'])
+            ->postJson(route('password.email'), ['email' => $user->email])
+            ->assertOk();
+
+        Notification::assertSentTo($user, ResetPassword::class);
+
+        Notification::assertCount(1);
+
+        $this->travel(61)->seconds();
+
+        $this->withServerVariables(['REMOTE_ADDR' => '127.0.0.1'])
+            ->postJson(route('password.email'), ['email' => $user->email])
+            ->assertOk();
+
+        Notification::assertCount(2);
+    }
+
     protected function tearDown(): void
     {
         Request::setTrustedHosts([]);
@@ -137,7 +216,7 @@ class PasswordResetLinkControllerTest extends TestCase
             'pending_email' => 'new@example.com',
         ]);
 
-        $this->post(route('password.email'), ['email' => 'new@example.com'])->assertInvalid('email');
+        $this->post(route('password.email'), ['email' => 'new@example.com'])->assertValid();
 
         Notification::assertNothingSent();
     }
