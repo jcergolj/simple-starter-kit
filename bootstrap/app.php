@@ -25,6 +25,10 @@ return Application::configure(basePath: dirname(__DIR__))
         },
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->trustHosts(at: function (): array {
+            return ['^'.preg_quote((string) parse_url(config('app.url'), PHP_URL_HOST)).'$'];
+        }, subdomains: false);
+
         $middleware->web(append: [
             AddLinkHeaderForPreloadedAssets::class,
         ]);

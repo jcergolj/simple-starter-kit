@@ -38,7 +38,7 @@ class InvitationController extends Controller
                     ->first();
 
                 if ($existingInvitation !== null) {
-                    $existingInvitation->role = RoleEnum::User;
+                    $existingInvitation->fill(['role' => RoleEnum::User]);
 
                     return $existingInvitation->renew();
                 }

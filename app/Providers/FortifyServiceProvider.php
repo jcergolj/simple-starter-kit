@@ -10,6 +10,7 @@ use App\Features\Authentication\Controllers\VerifyEmailController;
 use App\Models\User;
 use App\Rules\CurrentPassword;
 use App\ValueObjects\EmailAddress;
+use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -38,6 +39,13 @@ class FortifyServiceProvider extends ServiceProvider
         $this->configureFotifyActions();
         $this->configureFortifyViews();
         $this->configureRateLimiting();
+
+        ResetPassword::createUrlUsing(function (User $user, string $token): string {
+            return rtrim(config('app.url'), '/').route('password.reset', [
+                'token' => $token,
+                'email' => $user->getEmailForPasswordReset(),
+            ], absolute: false);
+        });
     }
 
     private function configureFortifyViews(): void
