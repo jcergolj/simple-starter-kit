@@ -29,7 +29,11 @@ class AppServiceProvider extends ServiceProvider
         $filesystems->extend('verified-sftp', function (Application $app, array $config) use ($filesystems): Filesystem {
             $fingerprint = $config['hostFingerprint'] ?? null;
 
-            throw_if(! is_string($fingerprint) || ! trim($fingerprint), InvalidArgumentException::class, 'SFTP_HOST_FINGERPRINT must contain an independently verified SSH host fingerprint.');
+            throw_if(
+                ! is_string($fingerprint) || ! trim($fingerprint),
+                InvalidArgumentException::class,
+                'SFTP_HOST_FINGERPRINT must contain an independently verified SSH host fingerprint.',
+            );
 
             return $filesystems->createSftpDriver($config);
         });
