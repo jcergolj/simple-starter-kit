@@ -268,6 +268,34 @@ Your hosting configuration and release process are responsible for:
 
 Use Metator's documentation and your generated configuration and recipe to determine which steps are automated. Verify the remaining operator responsibilities before going live. The local development `Procfile` is not a production service configuration.
 
+### Verify production mode before enabling traffic
+
+Make this a required release check in your generated Metator/Deployer workflow, after refreshing Laravel's configuration cache and before routing public traffic to the release. Stop the rollout if any check fails; do not use `--env=production` to make a verification command appear to pass.
+
+From the deployed release directory, as the application user, inspect the effective Laravel settings:
+
+```bash
+php artisan env --no-interaction
+php artisan config:show app.env --no-interaction
+php artisan config:show app.debug --no-interaction
+```
+
+Both environment checks must report `production`, and `app.debug` must be `false`. Checking `.env` alone is insufficient: a stale configuration cache or process-level environment can change the effective settings. Ensure PHP-FPM/web processes use the same release and configuration, reload persistent processes after deployment, and verify their effective environment/debug settings through existing restricted instrumentation if they differ from CLI. Do not publish a diagnostic endpoint or dump the full application configuration, which contains secrets.
+
+Then probe the release through its real HTTPS ingress without authentication. Replace `BASE_URL` with the deployed origin; do not supply cookies, credentials, or follow redirects:
+
+```bash
+BASE_URL='https://your-production-host'
+for path in horizon log-viewer log-viewer/api/hosts; do
+    curl --silent --show-error --output /dev/null --write-out '%{http_code}\n' \
+        --header 'Accept: application/json' "$BASE_URL/$path"
+done
+```
+
+Each application response must be `401`. A `200`, connection error, or unexpected status needs investigation before rollout. If an upstream access control intercepts these requests, also verify application authorization from an allowed, restricted network. A fresh browser session must redirect dashboard visits to sign-in, not show operational data. Run these probes before the traffic switch using your restricted staging/canary ingress, and repeat after the switch.
+
+The dashboard middleware already requires authentication, including in local mode. Horizon's development-environment authorization shortcut is not a reason to deploy with `APP_ENV=local`. Local defaults are for development, not evidence of production exposure. This repository has no deployed target; completing this checklist on the actual release remains the operator's responsibility.
+
 ### HTTPS sessions and reverse proxies
 
 With `APP_ENV=production`, session cookies default to `Secure`, even when TLS terminates at a reverse proxy and PHP receives HTTP. Set `SESSION_SECURE_COOKIE=true` explicitly in production and rebuild the configuration cache. Do not override it with `false` or `null`. Local development retains automatic HTTPS detection, so ordinary local HTTP sessions continue to work.
