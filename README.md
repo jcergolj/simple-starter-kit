@@ -268,6 +268,20 @@ Your hosting configuration and release process are responsible for:
 
 Use Metator's documentation and your generated configuration and recipe to determine which steps are automated. Verify the remaining operator responsibilities before going live. The local development `Procfile` is not a production service configuration.
 
+### HTTPS sessions and reverse proxies
+
+With `APP_ENV=production`, session cookies default to `Secure`, even when TLS terminates at a reverse proxy and PHP receives HTTP. Set `SESSION_SECURE_COOKIE=true` explicitly in production and rebuild the configuration cache. Do not override it with `false` or `null`. Local development retains automatic HTTPS detection, so ordinary local HTTP sessions continue to work.
+
+Cookie protection does not establish that Laravel recognizes the original request as HTTPS. For a reverse-proxied deployment:
+
+1. Restrict direct access to the application backend and make the proxy overwrite client-supplied forwarding headers.
+2. In the generated application's `bootstrap/app.php`, configure Laravel's `trustProxies(at: [...], headers: ...)` with the actual proxy IPs/CIDRs and only the headers that proxy supplies. Include `Request::HEADER_X_FORWARDED_PROTO` when it forwards the original scheme. Do not trust `*` or arbitrary client addresses; do not enable forwarded-host trust unless required and constrained by the host allowlist.
+3. Verify through the real TLS endpoint that Laravel's request reports HTTPS. Check via temporary restricted diagnostics or existing internal instrumentation, then remove diagnostics; forcing generated URLs to HTTPS is not proof that request detection works.
+4. Inspect a fresh HTTPS `/login` response in browser developer tools: the configured session cookie must include `Secure`, `HttpOnly`, and the expected `SameSite` attribute. Verify that sign-in and subsequent authenticated navigation work.
+5. Confirm HTTP is redirected to HTTPS at the web server/proxy and that an untrusted client cannot change the effective scheme, host, or client IP with forwarded headers.
+
+No production proxy topology is bundled with this starter kit. These live checks must be completed against your generated Metator/server configuration; application tests cannot verify a deployed proxy's behavior.
+
 ### SFTP backup host identity
 
 The `sftp-backup` disk requires `SFTP_HOST_FINGERPRINT` before it can connect, in every environment. Missing fingerprints raise a configuration error; mismatched host keys fail the connection. Other application commands remain available when SFTP is not configured.
