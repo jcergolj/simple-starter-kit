@@ -59,7 +59,7 @@ php artisan tailwindcss:build --no-tty
 php artisan storage:link
 ```
 
-6. Start the development processes, each in its own terminal from the project root. No additional process manager is required:
+6. Start the development processes, each in its own terminal from the project root. No additional process manager is required. There is no `composer dev` script or `Procfile`; use the direct Artisan commands below:
 
 ```bash
 php artisan serve --host=0.0.0.0 --no-reload
