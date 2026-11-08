@@ -304,9 +304,13 @@ The isolated host-identity regression uses a temporary loopback-only OpenSSH ser
 
 ### GitHub Actions
 
-If you want GitHub Actions to commit changes, update the repository permissions:
+The workflow grants `contents: read` by default. Only the code-formatter job requests `contents: write`, which is needed for its formatting commits. Other token permissions are disabled unless explicitly requested. Keep repository defaults read-only rather than granting write access to every job. Repository or organization policies may still restrict automated commits.
 
-**Settings -> Actions -> General -> Workflow permissions** and choose **Read and write permissions**.
+No repository secrets are inherited or explicitly passed to these reusable workflows. If a future workflow requires a secret, review the need and pass only the named secret to the job that needs it; do not add blanket `secrets: inherit` or a broad personal access token for routine checks.
+
+Reusable workflows intentionally remain on `@master` by maintainer choice. This is not immutable pinning: upstream changes can execute without a commit in this repository, including with the formatter's write-capable token. Periodically review upstream workflow and composite-action changes, especially token use, downloaded scripts, and new secret requirements. This review does not gate execution of upstream changes.
+
+If adopting immutable revisions later, review an upstream commit and its nested actions/downloads, replace each reusable-workflow reference with its full commit SHA, and update through reviewed changes after validating the workflows and their inputs. Pinning only the caller does not freeze upstream composite actions that still use mutable references or unversioned installers.
 
 ## Environment variables
 
