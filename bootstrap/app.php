@@ -19,8 +19,11 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
         then: function (): void {
             Route::middleware('web')->group(base_path('app/Features/Dashboard/Routes/web.php'));
+
             Route::middleware('web')->group(base_path('app/Features/Invitations/Routes/web.php'));
+
             Route::middleware('web')->group(base_path('app/Features/Settings/Routes/web.php'));
+
             Route::middleware('web')->group(base_path('app/Features/UserManagement/Routes/web.php'));
         },
     )
@@ -37,6 +40,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin' => EnsureUserIsAdmin::class,
             'not_blocked' => EnsureUserIsNotBlocked::class,
         ]);
+
         $middleware->web(append: [
             SetLocaleMiddleware::class,
             NormalizeEmailInput::class,

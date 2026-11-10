@@ -115,6 +115,7 @@ class CreateUserCommandTest extends TestCase
             ->assertSuccessful();
 
         $user = User::where('email', 'admin@example.com')->first();
+
         $this->assertSame('Admin User', $user->name);
 
         $this->assertTrue(Hash::check('password', $user->password));
@@ -143,6 +144,7 @@ class CreateUserCommandTest extends TestCase
             ->assertSuccessful();
 
         $user = User::where('email', 'superadmin@example.com')->first();
+
         $this->assertSame('Super Admin', $user->name);
 
         $this->assertTrue(Hash::check('password', $user->password));
@@ -172,6 +174,7 @@ class CreateUserCommandTest extends TestCase
             ->assertSuccessful();
 
         $invitation = Invitation::where('email', 'invite@example.com')->first();
+
         $this->assertNotNull($invitation);
 
         $this->assertSame(RoleEnum::User, $invitation->role);
@@ -251,6 +254,7 @@ class CreateUserCommandTest extends TestCase
             ->assertSuccessful();
 
         $invitation = Invitation::where('email', 'admin-invite@example.com')->first();
+
         $this->assertNotNull($invitation);
 
         $this->assertSame(RoleEnum::Admin, $invitation->role);
@@ -280,6 +284,7 @@ class CreateUserCommandTest extends TestCase
             ->assertSuccessful();
 
         $invitation = Invitation::where('email', 'superadmin-invite@example.com')->first();
+
         $this->assertNotNull($invitation);
 
         $this->assertSame(RoleEnum::Superadmin, $invitation->role);
@@ -309,6 +314,7 @@ class CreateUserCommandTest extends TestCase
             ->assertSuccessful();
 
         $invitation = Invitation::where('email', 'lang-test@example.com')->first();
+
         $this->assertSame('sl', $invitation->lang);
     }
 }

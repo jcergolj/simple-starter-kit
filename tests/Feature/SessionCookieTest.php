@@ -99,12 +99,16 @@ class SessionCookieTest extends TestCase
         $originalSecureCookie = getenv('SESSION_SECURE_COOKIE');
 
         $_ENV['APP_ENV'] = $environment;
+
         $_SERVER['APP_ENV'] = $environment;
+
         unset($_ENV['SESSION_SECURE_COOKIE'], $_SERVER['SESSION_SECURE_COOKIE']);
+
         putenv('SESSION_SECURE_COOKIE');
 
         if ($secureCookie !== null) {
             $_ENV['SESSION_SECURE_COOKIE'] = $secureCookie;
+
             $_SERVER['SESSION_SECURE_COOKIE'] = $secureCookie;
         }
 
@@ -114,6 +118,7 @@ class SessionCookieTest extends TestCase
             $_ENV = $originalEnvironment;
 
             $_SERVER = $originalServer;
+
             putenv($originalSecureCookie === false ? 'SESSION_SECURE_COOKIE' : 'SESSION_SECURE_COOKIE='.
                 $originalSecureCookie);
         }

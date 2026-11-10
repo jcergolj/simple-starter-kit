@@ -242,6 +242,7 @@ class PasswordResetLinkControllerTest extends TestCase
     public function reset_password_link_can_be_requested_with_mixed_case_email(): void
     {
         Notification::fake();
+
         $user = User::factory()->create(['email' => 'alice@example.com']);
 
         $this->post(route('password.request'), ['email' => 'ALICE@EXAMPLE.COM'])

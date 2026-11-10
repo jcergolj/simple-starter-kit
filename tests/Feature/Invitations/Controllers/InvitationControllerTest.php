@@ -94,6 +94,7 @@ class InvitationControllerTest extends TestCase
     public function admin_can_send_invite_email(): void
     {
         Mail::fake();
+
         $admin = User::factory()->admin()->create();
 
         $response = $this->actingAs($admin)->post(route('invitations.store'), [
@@ -105,6 +106,7 @@ class InvitationControllerTest extends TestCase
         InAppNotification::assertSuccess(__('Invitation sent successfully.'));
 
         $invitation = Invitation::first();
+
         $this->assertSame('invite@example.com', $invitation->email);
 
         Mail::assertSent(InvitationMail::class, function ($mail) {
@@ -128,6 +130,7 @@ class InvitationControllerTest extends TestCase
     public function duplicate_pending_email_fails_validation(): void
     {
         $admin = User::factory()->admin()->create();
+
         Invitation::factory()->create(['email' => 'pending@example.com']);
 
         $response = $this->actingAs($admin)->post(route('invitations.store'), [
@@ -141,11 +144,13 @@ class InvitationControllerTest extends TestCase
     public function expired_invitation_can_be_replaced(): void
     {
         Mail::fake();
+
         $admin = User::factory()->admin()->create();
 
         $invitation = Invitation::factory()->expired()->create([
             'email' => 'expired@example.com',
         ]);
+
         $oldToken = $invitation->token;
 
         $response = $this->actingAs($admin)->post(route('invitations.store'), [
@@ -169,11 +174,13 @@ class InvitationControllerTest extends TestCase
     public function accepted_invitation_can_be_replaced(): void
     {
         Mail::fake();
+
         $admin = User::factory()->admin()->create();
 
         $invitation = Invitation::factory()->accepted()->create([
             'email' => 'accepted@example.com',
         ]);
+
         $oldToken = $invitation->token;
 
         $response = $this->actingAs($admin)->post(route('invitations.store'), [

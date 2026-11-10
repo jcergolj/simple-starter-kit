@@ -24,6 +24,7 @@ class SendInvitation
 
                 if ($existingInvitation !== null) {
                     $existingInvitation->renew();
+
                     $existingInvitation->update(['role' => $role, 'lang' => $lang]);
 
                     return $existingInvitation;

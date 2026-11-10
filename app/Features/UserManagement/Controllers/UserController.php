@@ -34,10 +34,12 @@ class UserController extends Controller
         Gate::authorize('update', $user);
 
         $attributes = $request->validated();
+
         $emailChanged = $attributes['email'] !== $user->email;
 
         if ($emailChanged) {
             $attributes['email_verified_at'] = null;
+
             $attributes['pending_email'] = null;
         }
 

@@ -26,6 +26,7 @@ class AcceptInvitationControllerTest extends TestCase
     public function store_has_form_request(): void
     {
         $invitation = Invitation::factory()->create();
+
         $this->post(route('accept.invitations.store', $invitation->token));
 
         $this->assertContainsFormRequest(AcceptInvitationRequest::class);
@@ -188,6 +189,7 @@ class AcceptInvitationControllerTest extends TestCase
     public function store_does_not_accept_an_invitation_for_an_existing_user(): void
     {
         $invitation = Invitation::factory()->create(['email' => 'existing@example.com']);
+
         User::factory()->create(['email' => $invitation->email]);
 
         $response = $this->post(route('accept.invitations.store', $invitation->token), [

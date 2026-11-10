@@ -25,6 +25,7 @@ class EnsureUserIsNotBlockedTest extends TestCase
         $user = User::factory()->blocked()->create();
 
         $request = Request::create('/dashboard');
+
         $request->setUserResolver(function () use ($user) {
             return $user;
         });
@@ -44,6 +45,7 @@ class EnsureUserIsNotBlockedTest extends TestCase
         $user = User::factory()->create();
 
         $request = Request::create('/dashboard');
+
         $request->setUserResolver(function () use ($user) {
             return $user;
         });
@@ -51,6 +53,7 @@ class EnsureUserIsNotBlockedTest extends TestCase
         $nextCalled = false;
 
         $middleware = new EnsureUserIsNotBlocked;
+
         $response = $middleware->handle($request, function () use (&$nextCalled) {
             $nextCalled = true;
 
@@ -66,6 +69,7 @@ class EnsureUserIsNotBlockedTest extends TestCase
     public function guest_passes_through(): void
     {
         $request = Request::create('/');
+
         $request->setUserResolver(function () {
             return null;
         });
@@ -73,6 +77,7 @@ class EnsureUserIsNotBlockedTest extends TestCase
         $nextCalled = false;
 
         $middleware = new EnsureUserIsNotBlocked;
+
         $response = $middleware->handle($request, function () use (&$nextCalled) {
             $nextCalled = true;
 

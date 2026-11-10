@@ -32,10 +32,13 @@ class FortifyServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(SuccessfulPasswordResetLinkRequestResponse::class, PasswordResetLinkResponse::class);
+
         $this->app->bind(FailedPasswordResetLinkRequestResponse::class, PasswordResetLinkResponse::class);
+
         $this->app->bind(FortifyPasswordResetLinkController::class, PasswordResetLinkController::class);
 
         $this->app->bind(FortifyVerifyEmailController::class, VerifyEmailController::class);
+
         $this->app
             ->bind(
                 FortifyEmailVerificationNotificationController::class,
@@ -46,7 +49,9 @@ class FortifyServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureFotifyActions();
+
         $this->configureFortifyViews();
+
         $this->configureRateLimiting();
 
         ResetPassword::createUrlUsing(function (User $user, string $token): string {
@@ -62,18 +67,23 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::twoFactorChallengeView(function () {
             return view('authentication::two-factor-challenge');
         });
+
         Fortify::confirmPasswordView(function () {
             return view('authentication::confirm-password');
         });
+
         Fortify::loginView(function () {
             return view('authentication::login');
         });
+
         Fortify::verifyEmailView(function () {
             return view('authentication::verify-email');
         });
+
         Fortify::resetPasswordView(function () {
             return view('authentication::reset-password');
         });
+
         Fortify::requestPasswordResetLinkView(function () {
             return view('authentication::forgot-password');
         });
@@ -109,10 +119,13 @@ class FortifyServiceProvider extends ServiceProvider
                 ? $user
                 : null;
         });
+
         Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
+
         Fortify::confirmPasswordsUsing(function (User $user, ?string $password): bool {
             return (new CurrentPassword($user))->verify($password);
         });
+
         Fortify::redirectUserForTwoFactorAuthenticationUsing(RedirectIfTwoFactorAuthenticatable::class);
     }
 }

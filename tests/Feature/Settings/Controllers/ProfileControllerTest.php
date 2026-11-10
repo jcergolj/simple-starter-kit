@@ -85,6 +85,7 @@ class ProfileControllerTest extends TestCase
         $response->assertRedirect();
 
         $user->refresh();
+
         $this->assertNotNull($user->email_verified_at);
 
         $this->assertSame('new@example.com', $user->pending_email);

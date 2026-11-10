@@ -48,6 +48,7 @@ class NewPasswordControllerTest extends TestCase
         Notification::fake();
 
         $user = User::factory()->create();
+
         $rememberToken = $user->remember_token;
 
         $this->post(route('password.request'), [

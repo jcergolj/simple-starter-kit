@@ -30,6 +30,7 @@ class UserControllerTest extends TestCase
         parent::setUp();
 
         InAppNotification::fake();
+
         Notification::fake();
     }
 
@@ -177,6 +178,7 @@ class UserControllerTest extends TestCase
         InAppNotification::assertSuccess(__('User updated.'));
 
         $updatedUser = User::find($user->id);
+
         $this->assertSame('Updated Name', $updatedUser->name);
 
         $this->assertSame('updated@example.com', $updatedUser->email);

@@ -29,11 +29,17 @@ class FortifyTwoFactorAuthenticationTest extends TestCase
     public static function twoFactorOperations(): \Iterator
     {
         yield 'enable' => ['POST', 'two-factor.enable'];
+
         yield 'confirm' => ['POST', 'two-factor.confirm'];
+
         yield 'disable' => ['DELETE', 'two-factor.disable'];
+
         yield 'QR code' => ['GET', 'two-factor.qr-code'];
+
         yield 'secret key' => ['GET', 'two-factor.secret-key'];
+
         yield 'recovery codes' => ['GET', 'two-factor.recovery-codes'];
+
         yield 'regenerate recovery codes' => ['POST', 'two-factor.regenerate-recovery-codes'];
     }
 
@@ -54,6 +60,7 @@ class FortifyTwoFactorAuthenticationTest extends TestCase
         $token = Password::createToken($this->user);
 
         $this->flushSession();
+
         Auth::forgetGuards();
 
         $this->post(route('password.update'), [
@@ -64,6 +71,7 @@ class FortifyTwoFactorAuthenticationTest extends TestCase
         ])->assertValid()->assertRedirect(route('login'));
 
         $this->withSession($session);
+
         Auth::forgetGuards();
 
         $this->call($method, route($route))->assertRedirect(route('login'));
@@ -92,6 +100,7 @@ class FortifyTwoFactorAuthenticationTest extends TestCase
         $recoveryCodes = $this->user->two_factor_recovery_codes;
 
         $this->user->update(['blocked_at' => now()]);
+
         Auth::forgetGuards();
 
         $this->call($method, route($route))->assertForbidden();
@@ -109,6 +118,7 @@ class FortifyTwoFactorAuthenticationTest extends TestCase
     public function a_current_session_can_read_recovery_codes_and_disable_two_factor_authentication(): void
     {
         $this->signInAndConfirmPassword();
+
         Auth::forgetGuards();
 
         $this->getJson(route('two-factor.recovery-codes'))
@@ -132,6 +142,7 @@ class FortifyTwoFactorAuthenticationTest extends TestCase
         $this->signInAndConfirmPassword();
 
         $this->withSession(['auth.password_confirmed_at' => now()->subHours(4)->timestamp]);
+
         Auth::forgetGuards();
 
         $this->get(route('two-factor.recovery-codes'))->assertRedirect(route('password.confirm'));
@@ -146,6 +157,7 @@ class FortifyTwoFactorAuthenticationTest extends TestCase
             'password' => 'new-password',
             'blocked_at' => now(),
         ]);
+
         Auth::forgetGuards();
 
         $this->post(route('logout'))->assertRedirect(route('home'));

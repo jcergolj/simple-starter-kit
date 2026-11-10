@@ -14,13 +14,16 @@ class BackupConfigurationTest extends TestCase
     public function database_backup_uses_the_configured_mysql_connection(): void
     {
         $originalEnvironment = $this->databaseConnectionEnvironment();
+
         $this->setDatabaseConnectionEnvironment('mysql');
+
         Env::enablePutenv();
 
         try {
             $backup = require base_path('config/backup.php');
         } finally {
             $this->restoreDatabaseConnectionEnvironment($originalEnvironment);
+
             Env::disablePutenv();
         }
 
@@ -31,13 +34,16 @@ class BackupConfigurationTest extends TestCase
     public function database_backup_defaults_to_sqlite(): void
     {
         $originalEnvironment = $this->databaseConnectionEnvironment();
+
         $this->setDatabaseConnectionEnvironment(false);
+
         Env::enablePutenv();
 
         try {
             $backup = require base_path('config/backup.php');
         } finally {
             $this->restoreDatabaseConnectionEnvironment($originalEnvironment);
+
             Env::disablePutenv();
         }
 
@@ -58,13 +64,16 @@ class BackupConfigurationTest extends TestCase
     {
         if ($connection === false) {
             unset($_ENV['DB_CONNECTION'], $_SERVER['DB_CONNECTION']);
+
             putenv('DB_CONNECTION');
 
             return;
         }
 
         putenv('DB_CONNECTION='.$connection);
+
         $_ENV['DB_CONNECTION'] = $connection;
+
         $_SERVER['DB_CONNECTION'] = $connection;
     }
 

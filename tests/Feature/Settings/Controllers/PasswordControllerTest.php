@@ -48,6 +48,7 @@ class PasswordControllerTest extends TestCase
         $user = User::factory()->create([
             'password' => Hash::make('old-password'),
         ]);
+
         $rememberToken = $user->remember_token;
 
         $response = $this->actingAs($user)
@@ -61,6 +62,7 @@ class PasswordControllerTest extends TestCase
         $response->assertRedirect();
 
         $user->refresh();
+
         $this->assertTrue(Hash::check('new-password-123', $user->password));
 
         $this->assertNotSame($rememberToken, $user->remember_token);

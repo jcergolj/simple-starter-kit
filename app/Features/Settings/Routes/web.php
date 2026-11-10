@@ -21,9 +21,13 @@ Route::middleware(['auth', 'auth.session', 'verified', 'not_blocked'])->group(fu
             ->withoutMiddleware('verified')
             ->middleware([EnsureEmailIsVerifiedOrPending::class, 'password.confirm'])
             ->only(['edit', 'update']);
+
         Route::get('profile/delete', [ProfileController::class, 'delete'])->name('profile.delete');
+
         Route::post('profile/delete', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
         Route::singleton('password', PasswordController::class)->only(['edit', 'update']);
+
         Route::singleton('language', LanguageController::class)->only(['edit', 'update']);
 
         if (Features::canManageTwoFactorAuthentication()) {
@@ -45,7 +49,9 @@ Route::middleware(['auth', 'auth.session', 'verified', 'not_blocked'])->group(fu
                         'update',
                         'destroy',
                     ]);
+
                 Route::singleton('confirmed-two-factor', ConfirmedTwoFactorController::class)->only(['edit', 'update']);
+
                 Route::singleton('recovery-codes', RecoveryCodesController::class)->only(['edit', 'update']);
             });
         }

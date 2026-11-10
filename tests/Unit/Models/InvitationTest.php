@@ -69,6 +69,7 @@ class InvitationTest extends TestCase
     public function renew_invalidates_previous_token_and_reopens_invitation(): void
     {
         $invitation = Invitation::factory()->expired()->create();
+
         $oldToken = $invitation->token;
 
         $invitation->renew();

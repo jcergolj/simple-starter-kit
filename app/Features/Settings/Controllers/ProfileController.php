@@ -35,11 +35,15 @@ class ProfileController extends Controller
 
         if ($attributes['email'] !== $user->email) {
             $user->pending_email = $attributes['email'];
+
             $user->save();
+
             $user->sendEmailVerificationNotification();
+
             $user->notify(new EmailChangedNotification($attributes['email']));
         } else {
             $user->pending_email = null;
+
             $user->save();
 
             if (! $user->hasVerifiedEmail()) {
@@ -66,6 +70,7 @@ class ProfileController extends Controller
         $user->delete();
 
         Session::invalidate();
+
         Session::regenerateToken();
 
         return redirect('/');

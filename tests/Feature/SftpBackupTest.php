@@ -71,7 +71,9 @@ class SftpBackupTest extends TestCase
         ]));
 
         $this->server = new Process([$sshd, '-D', '-e', '-f', $configuration]);
+
         $this->server->setTimeout(10);
+
         $this->server->start();
 
         $ready = $this->server->waitUntil(function (string $type, string $output): bool {
@@ -95,6 +97,7 @@ class SftpBackupTest extends TestCase
     protected function tearDown(): void
     {
         $this->server?->stop();
+
         $this->directory?->delete();
 
         parent::tearDown();
