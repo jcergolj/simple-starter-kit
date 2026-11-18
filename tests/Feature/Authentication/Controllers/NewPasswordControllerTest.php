@@ -7,6 +7,7 @@ namespace Tests\Feature\Authentication\Controllers;
 use App\Models\User;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -58,11 +59,17 @@ class NewPasswordControllerTest extends TestCase
         Notification::assertSentTo($user, ResetPassword::class, function ($notification) use ($rememberToken, $user) {
             $this->post(route('password.update', ['token' => $notification->token]), [
                 'email' => $user->email,
-                'password' => 'password',
-                'password_confirmation' => 'password',
+                'password' => 'NewSecret123!',
+                'password_confirmation' => 'NewSecret123!',
             ])->assertValid()->assertRedirect(route('login'));
 
-            $this->assertNotSame($rememberToken, $user->refresh()->remember_token);
+            $savedUser = $user->fresh();
+
+            $this->assertTrue(Hash::check('NewSecret123!', $savedUser->password));
+
+            $this->assertFalse(Hash::check('password', $savedUser->password));
+
+            $this->assertNotSame($rememberToken, $savedUser->remember_token);
 
             return true;
         });

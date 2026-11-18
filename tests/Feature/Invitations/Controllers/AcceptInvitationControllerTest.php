@@ -245,9 +245,10 @@ class AcceptInvitationControllerTest extends TestCase
 
         $this->post(route('accept.invitations.store', $invitation->token), [
             'name' => 'Jane Doe',
+            'email' => 'spoofed@example.com',
             'password' => 'Secret123!',
             'password_confirmation' => 'Secret123!',
-        ]);
+        ])->assertValid()->assertRedirect(route('login'));
 
         $user = User::first();
 

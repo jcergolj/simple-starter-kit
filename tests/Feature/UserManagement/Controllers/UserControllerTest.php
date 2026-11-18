@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Tests\Feature\UserManagement\Controllers;
 
-use App\Enums\RoleEnum;
 use App\Features\UserManagement\Controllers\UserController;
 use App\Features\UserManagement\Requests\UpdateUserRequest;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Auth\Notifications\VerifyEmail;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\URL;
@@ -138,9 +138,11 @@ class UserControllerTest extends TestCase
 
         $response->assertSeeText($otherUser->name);
 
-        $this->assertDatabaseCount('users', 2);
+        $response->assertViewHas('users', function (Collection $users) use ($otherUser): bool {
+            $this->assertSame([$otherUser->id], $users->modelKeys());
 
-        $this->assertCount(1, User::where('role', RoleEnum::User)->get());
+            return true;
+        });
     }
 
     #[Test]
