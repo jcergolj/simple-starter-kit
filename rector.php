@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
+use App\Http\Requests\AppFormRequest;
 use Jcergolj\RectorForLaravel\CustomRules\AddBlankLineAfterPhpUnitAssertionRector;
+use Jcergolj\RectorForLaravel\CustomRules\AdoptProjectFormRequestRector;
 use Jcergolj\RectorForLaravel\CustomRules\ArrowFunctionToClosureRector;
 use Jcergolj\RectorForLaravel\CustomRules\BlankLineBetweenStatementsRector;
 use Jcergolj\RectorForLaravel\CustomRules\DataProviderBeforeTestRector;
@@ -12,6 +14,7 @@ use Jcergolj\RectorForLaravel\CustomRules\ModelQueryToDirectStaticCallRector;
 use Jcergolj\RectorForLaravel\CustomRules\PhpUnitTestDocblockToAttributeRector;
 use Jcergolj\RectorForLaravel\CustomRules\RemoveFillableFromUnguardedModelsRector;
 use Jcergolj\RectorForLaravel\CustomRules\RemoveMigrationDownMethodRector;
+use Jcergolj\RectorForLaravel\CustomRules\RemovePhpUnitTestPrefixRector;
 use Jcergolj\RectorForLaravel\CustomRules\WrapLongBooleanConditionsRector;
 use Jcergolj\RectorForLaravel\CustomRules\WrapLongChainsRector;
 use Jcergolj\RectorForLaravel\CustomRules\WrapLongConcatenationsRector;
@@ -110,11 +113,15 @@ return RectorConfig::configure()
         PhpUnitTestDocblockToAttributeRector::class,
         RemoveFillableFromUnguardedModelsRector::class,
         RemoveMigrationDownMethodRector::class,
+        RemovePhpUnitTestPrefixRector::class,
         WrapLongBooleanConditionsRector::class,
         WrapLongChainsRector::class,
         WrapLongConcatenationsRector::class,
         WrapLongListsRector::class,
         BlankLineBetweenStatementsRector::class,
+    ])
+    ->withConfiguredRule(AdoptProjectFormRequestRector::class, [
+        AdoptProjectFormRequestRector::BASE_CLASS => AppFormRequest::class,
     ])
     ->withCache(
         cacheClass: FileCacheStorage::class,
